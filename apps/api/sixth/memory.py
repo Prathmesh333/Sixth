@@ -172,7 +172,8 @@ class Memory:
 
     def add(self, owner: str, request: FactInput, source_id: str | None = None, fact_id: str | None = None):
         identifier = fact_id or uid()
-        existing = next((f for f in self.all(owner) if f["id"] == identifier), None)
+        prior = self.all(owner)
+        existing = next((f for f in prior if f["id"] == identifier), None)
         if existing:
             return existing
         fact = {
@@ -191,8 +192,13 @@ class Memory:
                 {"source_id": source_id or uid(), "excerpt": request.source_text, "captured_at": now()}
             ],
         }
-        for old in self.current(owner, fact["scope_id"]):
-            if (old["subject_id"], old["predicate"], old["scope_type"], old["scope_id"]) == (
+        for old in prior:
+            if old["status"] == "confirmed" and (
+                old["subject_id"],
+                old["predicate"],
+                old["scope_type"],
+                old["scope_id"],
+            ) == (
                 fact["subject_id"],
                 fact["predicate"],
                 fact["scope_type"],
