@@ -1,0 +1,535 @@
+{
+  "research_date": "2026-10-16",
+  "repositories": [
+    {
+      "repository": "khoj-ai/khoj",
+      "category": "Personal assistant",
+      "commit_sha": "ae229ca894c0b80ad84664afcfdde523b5e87057",
+      "commit_date": "2026-08-02T01:55:40Z",
+      "retrieved_utc": "2026-10-16T15:31:16Z",
+      "tree_truncated": false,
+      "license_observed": "AGPL-3.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "src/khoj/routers/api_chat.py",
+          "url": "https://github.com/khoj-ai/khoj/blob/ae229ca894c0b80ad84664afcfdde523b5e87057/src/khoj/routers/api_chat.py",
+          "line_count": 1761
+        },
+        {
+          "path": "src/khoj/processor/operator/grounding_agent.py",
+          "url": "https://github.com/khoj-ai/khoj/blob/ae229ca894c0b80ad84664afcfdde523b5e87057/src/khoj/processor/operator/grounding_agent.py",
+          "line_count": 412
+        },
+        {
+          "path": "docker-compose.yml",
+          "url": "https://github.com/khoj-ai/khoj/blob/ae229ca894c0b80ad84664afcfdde523b5e87057/docker-compose.yml",
+          "line_count": 132
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/khoj-ai/khoj/blob/ae229ca894c0b80ad84664afcfdde523b5e87057/README.md",
+          "line_count": 107
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/khoj-ai/khoj/blob/ae229ca894c0b80ad84664afcfdde523b5e87057/LICENSE",
+          "line_count": 661
+        }
+      ]
+    },
+    {
+      "repository": "leon-ai/leon",
+      "category": "Personal assistant",
+      "commit_sha": "21baf11714f618a9367f25882e59e856d3308037",
+      "commit_date": "2026-10-12T12:24:27Z",
+      "retrieved_utc": "2026-10-16T15:31:16Z",
+      "tree_truncated": false,
+      "license_observed": "MIT",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "core/context/ARCHITECTURE.md",
+          "url": "https://github.com/leon-ai/leon/blob/21baf11714f618a9367f25882e59e856d3308037/core/context/ARCHITECTURE.md",
+          "line_count": 68
+        },
+        {
+          "path": "server/src/core/llm-manager/llm-duties/react-llm-duty/agent-loop.ts",
+          "url": "https://github.com/leon-ai/leon/blob/21baf11714f618a9367f25882e59e856d3308037/server/src/core/llm-manager/llm-duties/react-llm-duty/agent-loop.ts",
+          "line_count": 2300
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/leon-ai/leon/blob/21baf11714f618a9367f25882e59e856d3308037/README.md",
+          "line_count": 184
+        },
+        {
+          "path": "LICENSE.md",
+          "url": "https://github.com/leon-ai/leon/blob/21baf11714f618a9367f25882e59e856d3308037/LICENSE.md",
+          "line_count": 21
+        }
+      ]
+    },
+    {
+      "repository": "OpenInterpreter/open-interpreter",
+      "category": "Execution harness",
+      "commit_sha": "ac1fcc8fe57aba51fcc3c79afd57a0883237fe87",
+      "commit_date": "2026-10-11T00:37:07Z",
+      "retrieved_utc": "2026-10-16T15:31:18Z",
+      "tree_truncated": false,
+      "license_observed": "Apache-2.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "docs/portability.md",
+          "url": "https://github.com/OpenInterpreter/open-interpreter/blob/ac1fcc8fe57aba51fcc3c79afd57a0883237fe87/docs/portability.md",
+          "line_count": 64
+        },
+        {
+          "path": "docs/streaming-web-chat.md",
+          "url": "https://github.com/OpenInterpreter/open-interpreter/blob/ac1fcc8fe57aba51fcc3c79afd57a0883237fe87/docs/streaming-web-chat.md",
+          "line_count": 342
+        },
+        {
+          "path": "codex-rs/core/src/lib.rs",
+          "url": "https://github.com/OpenInterpreter/open-interpreter/blob/ac1fcc8fe57aba51fcc3c79afd57a0883237fe87/codex-rs/core/src/lib.rs",
+          "line_count": 254
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/OpenInterpreter/open-interpreter/blob/ac1fcc8fe57aba51fcc3c79afd57a0883237fe87/README.md",
+          "line_count": 152
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/OpenInterpreter/open-interpreter/blob/ac1fcc8fe57aba51fcc3c79afd57a0883237fe87/LICENSE",
+          "line_count": 201
+        }
+      ]
+    },
+    {
+      "repository": "simular-ai/Agent-S",
+      "category": "Computer use",
+      "commit_sha": "15776a8dc659658b1963816ea006f7af1978e595",
+      "commit_date": "2026-10-08T22:27:32Z",
+      "retrieved_utc": "2026-10-16T15:31:16Z",
+      "tree_truncated": false,
+      "license_observed": "Apache-2.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "gui_agents/s3/agents/agent_s.py",
+          "url": "https://github.com/simular-ai/Agent-S/blob/15776a8dc659658b1963816ea006f7af1978e595/gui_agents/s3/agents/agent_s.py",
+          "line_count": 94
+        },
+        {
+          "path": "gui_agents/s3/agents/grounding.py",
+          "url": "https://github.com/simular-ai/Agent-S/blob/15776a8dc659658b1963816ea006f7af1978e595/gui_agents/s3/agents/grounding.py",
+          "line_count": 667
+        },
+        {
+          "path": "gui_agents/s3/agents/code_agent.py",
+          "url": "https://github.com/simular-ai/Agent-S/blob/15776a8dc659658b1963816ea006f7af1978e595/gui_agents/s3/agents/code_agent.py",
+          "line_count": 333
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/simular-ai/Agent-S/blob/15776a8dc659658b1963816ea006f7af1978e595/README.md",
+          "line_count": 400
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/simular-ai/Agent-S/blob/15776a8dc659658b1963816ea006f7af1978e595/LICENSE",
+          "line_count": 201
+        }
+      ]
+    },
+    {
+      "repository": "browser-use/browser-use",
+      "category": "Browser execution",
+      "commit_sha": "ccd22fef47a1a36e0c4596fef5db73a5117b9d06",
+      "commit_date": "2026-10-16T09:55:38Z",
+      "retrieved_utc": "2026-10-16T15:31:16Z",
+      "tree_truncated": false,
+      "license_observed": "MIT",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "browser_use/agent/service.py",
+          "url": "https://github.com/browser-use/browser-use/blob/ccd22fef47a1a36e0c4596fef5db73a5117b9d06/browser_use/agent/service.py",
+          "line_count": 4163
+        },
+        {
+          "path": "browser_use/mcp/server.py",
+          "url": "https://github.com/browser-use/browser-use/blob/ccd22fef47a1a36e0c4596fef5db73a5117b9d06/browser_use/mcp/server.py",
+          "line_count": 1294
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/browser-use/browser-use/blob/ccd22fef47a1a36e0c4596fef5db73a5117b9d06/README.md",
+          "line_count": 380
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/browser-use/browser-use/blob/ccd22fef47a1a36e0c4596fef5db73a5117b9d06/LICENSE",
+          "line_count": 21
+        }
+      ]
+    },
+    {
+      "repository": "Skyvern-AI/skyvern",
+      "category": "Browser workflows",
+      "commit_sha": "74ef06fc8f220d200a8479de62beb30041042cf6",
+      "commit_date": "2026-10-16T14:42:02Z",
+      "retrieved_utc": "2026-10-16T15:31:19Z",
+      "tree_truncated": false,
+      "license_observed": "AGPL-3.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "skyvern/forge/agent.py",
+          "url": "https://github.com/Skyvern-AI/skyvern/blob/74ef06fc8f220d200a8479de62beb30041042cf6/skyvern/forge/agent.py",
+          "line_count": 12036
+        },
+        {
+          "path": "skyvern/forge/sdk/workflow/service.py",
+          "url": "https://github.com/Skyvern-AI/skyvern/blob/74ef06fc8f220d200a8479de62beb30041042cf6/skyvern/forge/sdk/workflow/service.py",
+          "line_count": 18548
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/Skyvern-AI/skyvern/blob/74ef06fc8f220d200a8479de62beb30041042cf6/README.md",
+          "line_count": 596
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/Skyvern-AI/skyvern/blob/74ef06fc8f220d200a8479de62beb30041042cf6/LICENSE",
+          "line_count": 661
+        }
+      ]
+    },
+    {
+      "repository": "langchain-ai/langgraph",
+      "category": "Orchestration",
+      "commit_sha": "4e2dfe4a247abfc0d001f3ef8242cbbbba400d2c",
+      "commit_date": "2026-10-16T12:02:43Z",
+      "retrieved_utc": "2026-10-16T15:31:18Z",
+      "tree_truncated": false,
+      "license_observed": "MIT",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "libs/langgraph/langgraph/graph/state.py",
+          "url": "https://github.com/langchain-ai/langgraph/blob/4e2dfe4a247abfc0d001f3ef8242cbbbba400d2c/libs/langgraph/langgraph/graph/state.py",
+          "line_count": 1978
+        },
+        {
+          "path": "libs/checkpoint-postgres/README.md",
+          "url": "https://github.com/langchain-ai/langgraph/blob/4e2dfe4a247abfc0d001f3ef8242cbbbba400d2c/libs/checkpoint-postgres/README.md",
+          "line_count": 126
+        },
+        {
+          "path": "libs/langgraph/langgraph/types.py",
+          "url": "https://github.com/langchain-ai/langgraph/blob/4e2dfe4a247abfc0d001f3ef8242cbbbba400d2c/libs/langgraph/langgraph/types.py",
+          "line_count": 1096
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/langchain-ai/langgraph/blob/4e2dfe4a247abfc0d001f3ef8242cbbbba400d2c/README.md",
+          "line_count": 82
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/langchain-ai/langgraph/blob/4e2dfe4a247abfc0d001f3ef8242cbbbba400d2c/LICENSE",
+          "line_count": 21
+        }
+      ]
+    },
+    {
+      "repository": "getzep/graphiti",
+      "category": "Temporal graph memory",
+      "commit_sha": "d50741d1bf463cbe3859eb73914cbff1b66839e6",
+      "commit_date": "2026-10-15T19:00:06Z",
+      "retrieved_utc": "2026-10-16T15:31:18Z",
+      "tree_truncated": false,
+      "license_observed": "Apache-2.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "graphiti_core/graphiti.py",
+          "url": "https://github.com/getzep/graphiti/blob/d50741d1bf463cbe3859eb73914cbff1b66839e6/graphiti_core/graphiti.py",
+          "line_count": 2192
+        },
+        {
+          "path": "graphiti_core/driver/falkordb_driver.py",
+          "url": "https://github.com/getzep/graphiti/blob/d50741d1bf463cbe3859eb73914cbff1b66839e6/graphiti_core/driver/falkordb_driver.py",
+          "line_count": 378
+        },
+        {
+          "path": "examples/quickstart/quickstart_falkordb.py",
+          "url": "https://github.com/getzep/graphiti/blob/d50741d1bf463cbe3859eb73914cbff1b66839e6/examples/quickstart/quickstart_falkordb.py",
+          "line_count": 256
+        },
+        {
+          "path": "mcp_server/README.md",
+          "url": "https://github.com/getzep/graphiti/blob/d50741d1bf463cbe3859eb73914cbff1b66839e6/mcp_server/README.md",
+          "line_count": 719
+        },
+        {
+          "path": "mcp_server/docker/docker-compose-falkordb.yml",
+          "url": "https://github.com/getzep/graphiti/blob/d50741d1bf463cbe3859eb73914cbff1b66839e6/mcp_server/docker/docker-compose-falkordb.yml",
+          "line_count": 50
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/getzep/graphiti/blob/d50741d1bf463cbe3859eb73914cbff1b66839e6/README.md",
+          "line_count": 848
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/getzep/graphiti/blob/d50741d1bf463cbe3859eb73914cbff1b66839e6/LICENSE",
+          "line_count": 201
+        }
+      ]
+    },
+    {
+      "repository": "topoteretes/cognee",
+      "category": "Knowledge ingestion",
+      "commit_sha": "f154b32a9e544dac73e7ddf2010327cf9988edcd",
+      "commit_date": "2026-10-13T15:20:39Z",
+      "retrieved_utc": "2026-10-16T15:31:19Z",
+      "tree_truncated": false,
+      "license_observed": "Apache-2.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "cognee/api/v1/cognify/cognify.py",
+          "url": "https://github.com/topoteretes/cognee/blob/f154b32a9e544dac73e7ddf2010327cf9988edcd/cognee/api/v1/cognify/cognify.py",
+          "line_count": 751
+        },
+        {
+          "path": "cognee/api/v1/search/search.py",
+          "url": "https://github.com/topoteretes/cognee/blob/f154b32a9e544dac73e7ddf2010327cf9988edcd/cognee/api/v1/search/search.py",
+          "line_count": 427
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/topoteretes/cognee/blob/f154b32a9e544dac73e7ddf2010327cf9988edcd/README.md",
+          "line_count": 330
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/topoteretes/cognee/blob/f154b32a9e544dac73e7ddf2010327cf9988edcd/LICENSE",
+          "line_count": 201
+        }
+      ]
+    },
+    {
+      "repository": "mem0ai/mem0",
+      "category": "Personalized memory",
+      "commit_sha": "0724291bd864cf807e88ee8981c8226644e8fb42",
+      "commit_date": "2026-10-14T15:39:50Z",
+      "retrieved_utc": "2026-10-16T15:31:20Z",
+      "tree_truncated": false,
+      "license_observed": "Apache-2.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "mem0/memory/main.py",
+          "url": "https://github.com/mem0ai/mem0/blob/0724291bd864cf807e88ee8981c8226644e8fb42/mem0/memory/main.py",
+          "line_count": 3912
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/mem0ai/mem0/blob/0724291bd864cf807e88ee8981c8226644e8fb42/README.md",
+          "line_count": 280
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/mem0ai/mem0/blob/0724291bd864cf807e88ee8981c8226644e8fb42/LICENSE",
+          "line_count": 201
+        }
+      ]
+    },
+    {
+      "repository": "letta-ai/letta-code",
+      "category": "Stateful agents",
+      "commit_sha": "1297870b0aa6662d6c70729d273f5073c1bcbdea",
+      "commit_date": "2026-10-16T05:24:29Z",
+      "retrieved_utc": "2026-10-16T15:32:12Z",
+      "tree_truncated": false,
+      "license_observed": "Apache-2.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "src/tools/impl/workflow.ts",
+          "url": "https://github.com/letta-ai/letta-code/blob/1297870b0aa6662d6c70729d273f5073c1bcbdea/src/tools/impl/workflow.ts",
+          "line_count": 751
+        },
+        {
+          "path": "src/tools/workflow/workflow-engine.ts",
+          "url": "https://github.com/letta-ai/letta-code/blob/1297870b0aa6662d6c70729d273f5073c1bcbdea/src/tools/workflow/workflow-engine.ts",
+          "line_count": 531
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/letta-ai/letta-code/blob/1297870b0aa6662d6c70729d273f5073c1bcbdea/README.md",
+          "line_count": 145
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/letta-ai/letta-code/blob/1297870b0aa6662d6c70729d273f5073c1bcbdea/LICENSE",
+          "line_count": 198
+        }
+      ]
+    },
+    {
+      "repository": "FalkorDB/GraphRAG-SDK",
+      "category": "FalkorDB document retrieval",
+      "commit_sha": "35e67a0b27fdcc7f2c28508b09e86169851a8187",
+      "commit_date": "2026-10-14T12:40:01Z",
+      "retrieved_utc": "2026-10-16T15:31:21Z",
+      "tree_truncated": false,
+      "license_observed": "Apache-2.0",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "docs/architecture.mdx",
+          "url": "https://github.com/FalkorDB/GraphRAG-SDK/blob/35e67a0b27fdcc7f2c28508b09e86169851a8187/docs/architecture.mdx",
+          "line_count": 186
+        },
+        {
+          "path": "graphrag_sdk/src/graphrag_sdk/retrieval/router.py",
+          "url": "https://github.com/FalkorDB/GraphRAG-SDK/blob/35e67a0b27fdcc7f2c28508b09e86169851a8187/graphrag_sdk/src/graphrag_sdk/retrieval/router.py",
+          "line_count": 98
+        },
+        {
+          "path": "graphrag_sdk/src/graphrag_sdk/ingestion/lexical_graph.py",
+          "url": "https://github.com/FalkorDB/GraphRAG-SDK/blob/35e67a0b27fdcc7f2c28508b09e86169851a8187/graphrag_sdk/src/graphrag_sdk/ingestion/lexical_graph.py",
+          "line_count": 193
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/FalkorDB/GraphRAG-SDK/blob/35e67a0b27fdcc7f2c28508b09e86169851a8187/README.md",
+          "line_count": 315
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/FalkorDB/GraphRAG-SDK/blob/35e67a0b27fdcc7f2c28508b09e86169851a8187/LICENSE",
+          "line_count": 191
+        }
+      ]
+    },
+    {
+      "repository": "FalkorDB/FalkorDB",
+      "category": "Graph database",
+      "commit_sha": "0f45a8685aa8d542f026b4f5f6bcaa0fbb43c1c9",
+      "commit_date": "2026-10-15T13:51:48Z",
+      "retrieved_utc": "2026-10-16T15:31:21Z",
+      "tree_truncated": false,
+      "license_observed": "SSPLv1",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "Cargo.toml",
+          "url": "https://github.com/FalkorDB/FalkorDB/blob/0f45a8685aa8d542f026b4f5f6bcaa0fbb43c1c9/Cargo.toml",
+          "line_count": 90
+        },
+        {
+          "path": "src/lib.rs",
+          "url": "https://github.com/FalkorDB/FalkorDB/blob/0f45a8685aa8d542f026b4f5f6bcaa0fbb43c1c9/src/lib.rs",
+          "line_count": 121
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/FalkorDB/FalkorDB/blob/0f45a8685aa8d542f026b4f5f6bcaa0fbb43c1c9/README.md",
+          "line_count": 452
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/FalkorDB/FalkorDB/blob/0f45a8685aa8d542f026b4f5f6bcaa0fbb43c1c9/LICENSE",
+          "line_count": 655
+        }
+      ]
+    },
+    {
+      "repository": "assistant-ui/assistant-ui",
+      "category": "Chat interface",
+      "commit_sha": "2f3690c03954cac275f9bf9c26d81a18fc1e5ec0",
+      "commit_date": "2026-10-16T11:27:42Z",
+      "retrieved_utc": "2026-10-16T15:31:21Z",
+      "tree_truncated": false,
+      "license_observed": "MIT",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "packages/react-langgraph/src/useLangGraphRuntime.ts",
+          "url": "https://github.com/assistant-ui/assistant-ui/blob/2f3690c03954cac275f9bf9c26d81a18fc1e5ec0/packages/react-langgraph/src/useLangGraphRuntime.ts",
+          "line_count": 1327
+        },
+        {
+          "path": "packages/core/src/react/runtimes/useExternalStoreRuntime.ts",
+          "url": "https://github.com/assistant-ui/assistant-ui/blob/2f3690c03954cac275f9bf9c26d81a18fc1e5ec0/packages/core/src/react/runtimes/useExternalStoreRuntime.ts",
+          "line_count": 79
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/assistant-ui/assistant-ui/blob/2f3690c03954cac275f9bf9c26d81a18fc1e5ec0/README.md",
+          "line_count": 163
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/assistant-ui/assistant-ui/blob/2f3690c03954cac275f9bf9c26d81a18fc1e5ec0/LICENSE",
+          "line_count": 21
+        }
+      ]
+    },
+    {
+      "repository": "lobehub/lobe-chat",
+      "category": "Interface and runtime reference",
+      "commit_sha": "6d65ee7067311af0a9c326fc076af369abd3a4fd",
+      "commit_date": "2026-10-16T14:22:53Z",
+      "retrieved_utc": "2026-10-16T15:31:23Z",
+      "tree_truncated": false,
+      "license_observed": "LobeHub Community License",
+      "review_scope": "tree, README, license and selected implementation sections; not executed",
+      "sources": [
+        {
+          "path": "DESIGN.md",
+          "url": "https://github.com/lobehub/lobe-chat/blob/6d65ee7067311af0a9c326fc076af369abd3a4fd/DESIGN.md",
+          "line_count": 201
+        },
+        {
+          "path": "DESIGN.dark.md",
+          "url": "https://github.com/lobehub/lobe-chat/blob/6d65ee7067311af0a9c326fc076af369abd3a4fd/DESIGN.dark.md",
+          "line_count": 94
+        },
+        {
+          "path": "docs/development/basic/architecture.mdx",
+          "url": "https://github.com/lobehub/lobe-chat/blob/6d65ee7067311af0a9c326fc076af369abd3a4fd/docs/development/basic/architecture.mdx",
+          "line_count": 150
+        },
+        {
+          "path": "packages/agent-runtime/src/core/runtime.ts",
+          "url": "https://github.com/lobehub/lobe-chat/blob/6d65ee7067311af0a9c326fc076af369abd3a4fd/packages/agent-runtime/src/core/runtime.ts",
+          "line_count": 1075
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/lobehub/lobe-chat/blob/6d65ee7067311af0a9c326fc076af369abd3a4fd/README.md",
+          "line_count": 593
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/lobehub/lobe-chat/blob/6d65ee7067311af0a9c326fc076af369abd3a4fd/LICENSE",
+          "line_count": 24
+        }
+      ]
+    }
+  ],
+  "additional_notice": {
+    "repository": "letta-ai/letta",
+    "sha": "5bcdd177d70fa2b31a754cfcd801e77b2e1ab16a",
+    "finding": "README points active development to letta-ai/letta-code; historical API is archived"
+  }
+}

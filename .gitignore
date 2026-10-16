@@ -1,0 +1,13 @@
+# Research retrieval cache and local validation helpers
+.research/
+# Local credentials and runtime artifacts
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.local
+__pycache__/
+.venv/
+node_modules/
+data/
+artifacts/

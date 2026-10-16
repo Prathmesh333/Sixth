@@ -1,0 +1,17 @@
+# Infrastructure example only. Select and test an image digest before use.
+services:
+  falkordb:
+    image: ${FALKORDB_IMAGE:?Set FALKORDB_IMAGE to a tested release or digest}
+    ports:
+      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - falkordb_data:/var/lib/falkordb/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  falkordb_data:

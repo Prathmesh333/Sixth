@@ -1,0 +1,64 @@
+/* Original Sixth theme proposals. Validate rendered components separately. */
+[data-theme="dusk"] {
+  color-scheme: dark;
+  --sixth-background: #111318;
+  --sixth-surface: #1B1E26;
+  --sixth-elevated: #242936;
+  --sixth-text: #F3F4F8;
+  --sixth-muted: #AFB8CA;
+  --sixth-border: #697488;
+  --sixth-accent: #B8B8FF;
+  --sixth-on-accent: #17172B;
+  --sixth-focus: #CFCEFF;
+  --sixth-success: #88DDB0;
+  --sixth-warning: #F0CC83;
+  --sixth-danger: #FFB0AE;
+}
+[data-theme="paper"] {
+  color-scheme: light;
+  --sixth-background: #F7F6F2;
+  --sixth-surface: #FFFFFF;
+  --sixth-elevated: #EDECE7;
+  --sixth-text: #20212A;
+  --sixth-muted: #5D6270;
+  --sixth-border: #7D8290;
+  --sixth-accent: #4845A8;
+  --sixth-on-accent: #FFFFFF;
+  --sixth-focus: #4845A8;
+  --sixth-success: #246B48;
+  --sixth-warning: #79500B;
+  --sixth-danger: #B13238;
+}
+[data-theme="grove"] {
+  color-scheme: dark;
+  --sixth-background: #101915;
+  --sixth-surface: #19271F;
+  --sixth-elevated: #25382D;
+  --sixth-text: #EEF5EF;
+  --sixth-muted: #AABFB0;
+  --sixth-border: #6D8876;
+  --sixth-accent: #A4D7AD;
+  --sixth-on-accent: #13291A;
+  --sixth-focus: #CBEDC9;
+  --sixth-success: #A4D7AD;
+  --sixth-warning: #E4C88E;
+  --sixth-danger: #F3ACA8;
+}
+
+.sixth-theme {
+  background: var(--sixth-background);
+  color: var(--sixth-text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.sixth-theme :focus-visible {
+  outline: 2px solid var(--sixth-focus);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sixth-theme *, .sixth-theme *::before, .sixth-theme *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

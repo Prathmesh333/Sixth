@@ -1,0 +1,112 @@
+{
+  "scenario": "birthday-dinner",
+  "mode": "sandbox",
+  "timezone": "Asia/Calcutta",
+  "user": {
+    "id": "alex",
+    "name": "Alex"
+  },
+  "people": [
+    {
+      "id": "maya",
+      "name": "Maya"
+    },
+    {
+      "id": "sam",
+      "name": "Sam"
+    }
+  ],
+  "event": {
+    "id": "dinner-01",
+    "title": "Maya's birthday dinner",
+    "starts_at": "2026-10-17T19:00:00+05:30",
+    "ends_at": "2026-10-17T21:00:00+05:30",
+    "guest_count": 4,
+    "attendee_ids": [
+      "alex",
+      "maya",
+      "sam"
+    ]
+  },
+  "sources": [
+    {
+      "id": "source-vegetarian",
+      "type": "message",
+      "text": "Maya is vegetarian.",
+      "recorded_at": "2026-10-16T10:00:00+05:30"
+    },
+    {
+      "id": "source-pantry",
+      "type": "message",
+      "text": "I have 200 grams of rice.",
+      "recorded_at": "2026-10-16T10:01:00+05:30"
+    }
+  ],
+  "assertions": [
+    {
+      "id": "fact-maya-vegetarian",
+      "subject_id": "maya",
+      "predicate": "diet",
+      "value": "vegetarian",
+      "status": "confirmed",
+      "scope_type": "person",
+      "scope_id": "maya",
+      "source_id": "source-vegetarian",
+      "version": 1
+    }
+  ],
+  "pantry": [
+    {
+      "ingredient_id": "rice",
+      "quantity": 200,
+      "unit": "g"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "chickpea-rice",
+      "name": "Chickpea rice bowls",
+      "base_servings": 4,
+      "vegetarian": true,
+      "dairy_free": true,
+      "ingredients": [
+        {
+          "id": "rice",
+          "quantity": 300,
+          "unit": "g"
+        },
+        {
+          "id": "chickpeas",
+          "quantity": 400,
+          "unit": "g"
+        },
+        {
+          "id": "tomato",
+          "quantity": 200,
+          "unit": "g"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "id": "change-01",
+      "message": "Two more people are joining, and Maya avoids dairy for this dinner.",
+      "guest_count": 6,
+      "assertion": {
+        "subject_id": "maya",
+        "predicate": "avoids",
+        "value": "dairy",
+        "scope_type": "event",
+        "scope_id": "dinner-01"
+      }
+    }
+  ],
+  "expected": {
+    "initial_missing_rice_g": 100,
+    "revised_missing_rice_g": 250,
+    "final_servings": 6,
+    "purchase_completed": false,
+    "must_preserve_temporary_scope": true
+  }
+}
