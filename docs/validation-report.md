@@ -1,5 +1,7 @@
 # Documentation validation report
 
+Historical report from the documentation-only phase. For application checks, see [implementation status](19-implementation-status.md).
+
 Run date: October 16, 2026. Checks apply to documentation and supporting artifacts, not an implemented Sixth application.
 
 | Check | Result | Evidence |

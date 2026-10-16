@@ -1,0 +1,17 @@
+{
+  "name": "sixth-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "dev:api": "uv run uvicorn sixth.main:app --app-dir apps/api --host 127.0.0.1 --port 8000",
+    "build": "npm run build --workspace apps/web",
+    "check": "npm run check --workspace apps/web",
+    "test:api": "uv run pytest",
+    "test:e2e": "uv run python scripts/run_browser_tests.py"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.0"
+  }
+}

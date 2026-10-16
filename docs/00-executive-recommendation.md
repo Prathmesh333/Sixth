@@ -1,6 +1,6 @@
 # Executive recommendation
 
-Status: proposed design, October 16, 2026. This is an implementation plan, not a report of completed features.
+This document records the proposed architecture. A working local foundation now exists; see [implementation status](19-implementation-status.md) for verified behavior and remaining integration work.
 
 ## Build decision
 

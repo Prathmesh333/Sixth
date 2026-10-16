@@ -1,6 +1,6 @@
 # Evaluation and test plan
 
-No application tests have run because the application is not implemented. The [validation report](validation-report.md) covers documentation artifacts only.
+The local foundation now has automated API and browser checks. See [implementation status](19-implementation-status.md) for current results. The [validation report](validation-report.md) records the earlier documentation-only checks; the broader evaluation below remains a target.
 
 ## Prove the graph changes actions
 

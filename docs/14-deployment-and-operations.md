@@ -2,7 +2,7 @@
 
 ## Current state
 
-No application, live environment or database was deployed during documentation work. [compose.yaml](../examples/infra/compose.yaml) is an infrastructure example for FalkorDB only. It does not start a Sixth API, frontend or worker.
+The API and frontend run locally. The root [Compose configuration](../compose.yaml) builds Sixth and starts FalkorDB, but Docker execution has not been verified on this host. The older [infrastructure example](../examples/infra/compose.yaml) starts only FalkorDB. See [implementation status](19-implementation-status.md).
 
 ## Local development target
 

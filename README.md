@@ -4,9 +4,67 @@
 
 Sixth is a proposed consumer assistant inspired by the conversational experience at [Instinct](https://instinct.com/). It connects personal context, remembers decisions, and uses tools to carry out requests. FalkorDB supplies the relationships that change its plans and actions.
 
-This workspace currently contains research, specifications, and implementation examples. **The application has not been built or deployed.** Examples are not evidence of working integrations. Research was conducted on October 16, 2026; repository references use pinned commits.
+Sixth now includes a working local application: React chat, sourced memory, persistent LangGraph workflows, dinner planning and a reviewed sandbox cart. The default is explicitly labeled fixture memory with a local planner. A native FalkorDB adapter and optional model endpoint are implemented; live service verification is tracked in the [implementation status](docs/19-implementation-status.md). Research references use pinned commits.
+
+## Run Sixth locally
+
+Requirements: Node.js 22 and [uv](https://docs.astral.sh/uv/). The lockfile selects Python 3.12.
+
+```powershell
+uv sync --frozen
+npm ci
+Copy-Item .env.example .env
+```
+
+Start the API and frontend in separate terminals:
+
+```powershell
+npm run dev:api
+```
+
+```powershell
+npm run dev
+```
+
+Open [Sixth](http://127.0.0.1:5173/). Choose the local Alex account. Try these messages in order:
+
+1. `Maya is vegetarian.`
+2. Start a new conversation, then `Plan Maya's birthday dinner for four.`
+3. `Two more people are joining and Maya avoids dairy for this dinner.`
+4. Review **Prepare test cart**, then inspect **Why this plan?**
+
+Preferences, plans and cart results survive restarts. The calendar, recipe catalog, pantry and prices are sample data. A sandbox cart is a real local state change, never a real purchase. Demo accounts are for private localhost use, not production authentication.
+
+## Connect the real graph and a model
+
+To use an existing FalkorDB server, set `SIXTH_MEMORY_BACKEND=falkordb` and the `SIXTH_FALKORDB_*` fields in `.env`, then restart the API. FalkorDB mode does not silently fall back to SQLite. Fixture facts are not automatically migrated to a live graph.
+
+With Docker available, the root Compose configuration builds the application and starts FalkorDB:
+
+```powershell
+docker compose up --build
+```
+
+Open [Sixth with the graph backend](http://127.0.0.1:8000/) and [FalkorDB Browser](http://127.0.0.1:3000/). This container path has not been executed on the development host. The default database image is for development; pin a tested digest before deployment.
+
+To enable model-assisted intent parsing, set `SIXTH_MODEL_BASE_URL`, `SIXTH_MODEL_NAME`, and `SIXTH_MODEL_API_KEY` server-side. Without those settings, the supported local intents remain usable. No model credentials go to the browser. A live model call has not been verified yet.
+
+## Verify
+
+```powershell
+uv run pytest tests/test_application.py -q
+uv run ruff check apps/api tests scripts
+npm run build
+npm run test:e2e
+```
+
+The browser runner starts its own isolated servers and fixture data. It defaults to installed Google Chrome. For bundled Chromium, run `uv run playwright install chromium` and set `SIXTH_BROWSER_CHANNEL` to an empty string. Screenshots and logs go to ignored `artifacts/`.
+
+For an existing real FalkorDB server, set `SIXTH_GRAPH_TEST=1` and run `uv run pytest tests/test_falkordb.py -q`. The dedicated GitHub Actions graph job also runs this test with a database service. Runtime API documentation is served at `/docs`; the original `specs/openapi.json` remains the broader design contract.
 
 ## Read first
+
+Current build: [implementation status and verification](docs/19-implementation-status.md).
 
 1. [Executive recommendation](docs/00-executive-recommendation.md)
 2. [Product requirements](docs/01-product-requirements.md)

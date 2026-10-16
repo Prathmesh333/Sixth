@@ -1,6 +1,6 @@
 # Proposed codebase structure
 
-This is the intended application layout. Only docs, specs, design tokens and examples exist today.
+This is the intended fuller application layout. The local foundation is implemented under apps/api/sixth and apps/web/src with tests and CI; some proposed subdivisions remain consolidated. See [implementation status](19-implementation-status.md).
 
 ```text
 sixth/

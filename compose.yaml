@@ -1,0 +1,32 @@
+# Private local development. Docker startup has not been verified on this host.
+services:
+  sixth:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      SIXTH_MEMORY_BACKEND: falkordb
+      SIXTH_FALKORDB_HOST: falkordb
+      SIXTH_MODEL_NAME: ${SIXTH_MODEL_NAME:-}
+      SIXTH_MODEL_API_KEY: ${SIXTH_MODEL_API_KEY:-}
+      SIXTH_MODEL_BASE_URL: ${SIXTH_MODEL_BASE_URL:-https://api.openai.com/v1}
+    volumes:
+      - sixth_data:/app/data
+    depends_on:
+      falkordb:
+        condition: service_healthy
+  falkordb:
+    # Official development image; pin a tested digest before public deployment.
+    image: ${FALKORDB_IMAGE:-falkordb/falkordb:latest}
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - falkordb_data:/var/lib/falkordb/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+volumes:
+  sixth_data:
+  falkordb_data:

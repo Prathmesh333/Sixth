@@ -1,0 +1,13 @@
+.git
+.research
+.venv
+**/node_modules
+**/dist
+**/__pycache__
+.env
+.env.*
+data
+artifacts
+tests
+.pytest_cache
+.ruff_cache
