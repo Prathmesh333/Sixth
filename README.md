@@ -66,6 +66,8 @@ For an existing real FalkorDB server, set `SIXTH_GRAPH_TEST=1` and run `uv run p
 
 Current build: [implementation status and verification](docs/19-implementation-status.md).
 
+New research: [Instinct evidence, Sixth capability gaps, and the messaging/agent implementation plan](docs/20-instinct-capability-map.md).
+
 1. [Executive recommendation](docs/00-executive-recommendation.md)
 2. [Product requirements](docs/01-product-requirements.md)
 3. [User journeys and acceptance criteria](docs/02-user-journeys.md)
