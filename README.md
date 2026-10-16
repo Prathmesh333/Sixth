@@ -45,7 +45,7 @@ With Docker available, the root Compose configuration builds the application and
 docker compose up --build
 ```
 
-Open [Sixth with the graph backend](http://127.0.0.1:8000/) and [FalkorDB Browser](http://127.0.0.1:3000/). This container path has not been executed on the development host. The default database image is for development; pin a tested digest before deployment.
+Open [Sixth with the graph backend](http://127.0.0.1:8000/) and [FalkorDB Browser](http://127.0.0.1:3000/). [CI verifies the container path and real graph integration](https://github.com/Prathmesh333/Sixth/actions/runs/38935709597); Docker is unavailable on the Windows development host. The database image is pinned to the tested service digest. This remains a private local demo, not a production deployment.
 
 To enable model-assisted intent parsing, set `SIXTH_MODEL_BASE_URL`, `SIXTH_MODEL_NAME`, and `SIXTH_MODEL_API_KEY` server-side. Without those settings, the supported local intents remain usable. No model credentials go to the browser. A live model call has not been verified yet.
 

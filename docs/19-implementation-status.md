@@ -18,11 +18,14 @@ October 16, 2026. This is the current implementation record; earlier design docu
 
 The native client adapter is implemented. It selects server-owned per-user graph names and stores people, sources and assertions. Dinner context traverses Event <- ATTENDS - Person <- HAS_SUBJECT - Assertion -> SUPPORTED_BY - Source. Plans link back to the assertions and recipes behind their decisions. Verified cart outcomes use an idempotent projection outbox.
 
-FalkorDB mode fails closed when unavailable; it never substitutes fixture memory. A real-server integration test and a dedicated CI database job are included. Local graph execution remains unverified because Docker is absent and the registered WSL distribution cannot mount its missing disk. Container image digest pinning remains a release gate.
+FalkorDB mode fails closed when unavailable; it never substitutes fixture memory. Both real-server graph tests pass in [GitHub Actions](https://github.com/Prathmesh333/Sixth/actions/runs/38935709597): sourced event traversal, corrections, isolation, forgetting, graph-backed planning and verified outcome projection. Compose and CI pin the official database image digest resolved by the runner.
+
+The same CI run builds the Docker image, starts Sixth and FalkorDB through Compose, and verifies API readiness and the bundled frontend. This Windows host still uses fixture mode because Docker is absent and its registered WSL distribution cannot mount a missing disk.
 
 ## Verification
 
 - Eight API/application tests pass, including correction, isolation, stale reviews, idempotency, event replay, timezone validation, unsupported restrictions and restart/resume.
+- Two real FalkorDB integration tests pass in CI, alongside the application and container deployment jobs.
 - The browser workflow passes against real local API/frontend processes, with isolated test data.
 - Browser layout checks cover 320, 768, 1024 and 1440 pixels without horizontal document overflow.
 - Axe checks found no WCAG A/AA violations on the welcome and checked settings screens across the supplied themes. This is not a full accessibility certification.
@@ -32,7 +35,6 @@ FalkorDB mode fails closed when unavailable; it never substitutes fixture memory
 ## Not yet verified or implemented
 
 - Live model-provider calls require server-side configuration and have not been exercised.
-- The Docker build/Compose path is supplied but has not run on this host.
 - Browser-use execution, real calendar OAuth, real merchant integrations, voice and messaging are not implemented.
 - File ingestion, arbitrary task execution, advanced temporal/entity resolution, and Graphiti integration remain future work.
 - Production authentication, distributed workers, comprehensive rate limits, encrypted credential storage and backup/deletion policies remain deployment work.
@@ -48,4 +50,4 @@ The forgetting operation removes the selected assertion and attributable source/
 
 ## Next implementation gates
 
-Verify the graph job against a real database, exercise a configured model, then add browser execution against a controlled storefront. Add live calendar read access only after the core loop stays reliable. Keep the sample/live distinction visible as each integration arrives.
+Exercise a configured model, then add browser execution against a controlled storefront. Add live calendar read access only after the core loop stays reliable. Configure a local or managed FalkorDB connection to replace fixture mode on this Windows host. Keep the sample/live distinction visible as each integration arrives.
