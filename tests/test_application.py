@@ -132,6 +132,48 @@ def test_correction_and_forgetting_remove_retrievable_context(workspace):
     assert approve(client, headers, task).status_code == 409
 
 
+def test_other_account_cannot_retrieve_modify_or_delete_private_profile(workspace):
+    client, headers, _ = workspace
+    created = client.post(
+        "/v1/memory",
+        headers=headers,
+        json={
+            "subject": "Me",
+            "predicate": "preference",
+            "value": "private-profile-marker-8472",
+            "source_text": "My private preference",
+        },
+    )
+    assert created.status_code == 201
+    fact = created.json()
+
+    other_headers = login(client, "jordan")
+    # A supplied owner or known subject ID must never select another account's graph.
+    response = client.get("/v1/memory", params={"owner": "alex", "subject_id": fact["subject_id"]})
+    assert response.status_code == 200
+    assert response.json()["items"] == []
+    exported = client.get("/v1/export")
+    assert exported.status_code == 200
+    assert exported.json()["assertions"] == []
+    assert "private-profile-marker-8472" not in exported.text
+    assert client.patch(
+        f"/v1/memory/{fact['id']}",
+        headers=other_headers,
+        json={"expected_version": 1, "value": "changed", "reason": "cross-account attempt"},
+    ).status_code == 404
+    assert client.delete(f"/v1/memory/{fact['id']}", headers=other_headers).status_code == 404
+
+    recall, _ = send(client, other_headers, "What do you know about Alex?")
+    assert recall["evidence"] == []
+    assert "private-profile-marker-8472" not in recall["reply"]
+
+    login(client, "alex")
+    remaining = client.get("/v1/memory").json()["items"]
+    assert len(remaining) == 1
+    assert remaining[0]["id"] == fact["id"]
+    assert remaining[0]["value"] == "private-profile-marker-8472"
+
+
 def test_http_retry_and_sse_reconnect(workspace):
     client, headers, _ = workspace
     first, conv = send(client, headers, "Maya is vegetarian", key="same-request-key")
