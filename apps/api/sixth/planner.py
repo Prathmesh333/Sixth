@@ -1,3 +1,4 @@
+import json
 import re
 
 import httpx
@@ -68,6 +69,12 @@ class Planner:
             "Never invent completed tasks, sources or user preferences. Schema: "
             + str(Intent.model_json_schema())
         )
+        prompt += (
+            " For remember, predicate must be diet, avoids, allergy or preference. "
+            "Use diet for vegetarian or vegan. Subject names contain only the person, not the event. "
+            "Example: Plan Avery's dinner for four -> kind=dinner, subject=Avery, guests=4. "
+            "Avery is vegetarian -> kind=remember, subject=Avery, predicate=diet, value=vegetarian."
+        )
         with httpx.Client(timeout=35) as client:
             response = client.post(
                 self.settings.model_base_url.rstrip("/") + "/chat/completions",
@@ -81,4 +88,26 @@ class Planner:
                 },
             )
             response.raise_for_status()
-            return Intent.model_validate_json(response.json()["choices"][0]["message"]["content"])
+            value = json.loads(response.json()["choices"][0]["message"]["content"])
+            return self.normalize_model_intent(Intent.model_validate(value))
+
+    @staticmethod
+    def normalize_model_intent(intent: Intent) -> Intent:
+        """Normalize known model aliases before typed execution and graph lookup."""
+        if intent.kind == "remember":
+            aliases = {
+                "dietary preference": "diet", "dietary_preference": "diet", "dietary restriction": "diet",
+                "food preference": "preference", "likes": "preference", "prefers": "preference",
+                "avoid": "avoids", "avoidance": "avoids", "allergies": "allergy", "allergic to": "allergy",
+            }
+            predicate = intent.predicate.casefold().strip()
+            intent.predicate = aliases.get(predicate, predicate)
+            if intent.value.casefold().strip() in {"vegetarian", "vegan"} and intent.predicate != "allergy":
+                intent.predicate = "diet"
+            if intent.predicate not in {"diet", "avoids", "allergy", "preference"}:
+                raise ValueError("Unsupported model memory predicate")
+        if intent.kind == "dinner":
+            intent.subject = re.sub(
+                r"[’']s\s+(?:birthday\s+)?(?:dinner|meal)(?:\s.*)?$", "", intent.subject, flags=re.IGNORECASE,
+            ).strip()
+        return intent

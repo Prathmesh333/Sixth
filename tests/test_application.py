@@ -294,3 +294,27 @@ def test_render_rejects_ephemeral_storage_and_unprotected_login(settings, monkey
     settings.database_url = "postgresql://not-contacted/unused"
     with pytest.raises(RuntimeError, match="SIXTH_DEMO_ACCESS_CODE"):
         create_app(settings)
+
+
+def test_model_aliases_preserve_diet_evidence_and_person_identity(settings, monkeypatch):
+    import httpx
+    from sixth.planner import Planner
+
+    settings.model_api_key = "test-key"
+    settings.model_name = "test-model"
+    outputs = iter([
+        '{"kind":"remember","subject":"Avery","predicate":"dietary preference","value":"vegetarian"}',
+        '{"kind":"dinner","subject":"Avery’s dinner","guests":4}',
+    ])
+    client_type = httpx.Client
+    transport = httpx.MockTransport(lambda request: httpx.Response(
+        200, json={"choices": [{"message": {"content": next(outputs)}}]},
+    ))
+    monkeypatch.setattr(httpx, "Client", lambda **kwargs: client_type(transport=transport, **kwargs))
+    planner = Planner(settings)
+    fact = planner.parse("Remember Avery is vegetarian")
+    assert fact.subject == "Avery"
+    assert fact.predicate == "diet"
+    plan = planner.parse("Plan Avery’s dinner for four")
+    assert plan.subject == "Avery"
+    assert plan.guests == 4
