@@ -19,13 +19,15 @@ from .connectors import calendar, fingerprint
 from .memory import Memory
 from .models import CorrectionInput, DecisionInput, DemoLogin, FactInput, MessageInput, now, uid
 from .planner import Planner
+from .postgres import PostgresStore
 from .runtime import Runtime
 from .storage import Store
 
 
 def create_app(settings: Settings | None = None):
     settings = settings or Settings()
-    store = Store(settings.data_dir / "sixth.sqlite")
+    store_path = settings.data_dir / "sixth.sqlite"
+    store = PostgresStore(settings.database_url, store_path) if settings.database_url else Store(store_path)
     memory = Memory(store, settings)
     planner = Planner(settings)
     runtime = Runtime(store, memory, planner)
@@ -34,10 +36,10 @@ def create_app(settings: Settings | None = None):
 
     @asynccontextmanager
     async def lifespan(app):
-        for owner in ("alex", "jordan"):
+        for owner in store.owners():
             for task in store.list(owner, "task"):
                 if task["status"] in {"queued", "running"}:
-                    executor.submit(runtime.run, owner, task["id"])
+                    executor.submit(runtime.run, owner, task["id"], task.get("decision"))
             runtime.project_outcomes(owner)
         yield
         executor.shutdown(wait=True)
@@ -138,6 +140,8 @@ def create_app(settings: Settings | None = None):
         origin_check(request)
         if not settings.demo_login:
             raise HTTPException(403, "Demo sign-in is disabled")
+        if settings.demo_access_code and not secrets.compare_digest(body.access_code, settings.demo_access_code):
+            raise HTTPException(403, "Enter the private demo access code")
         token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(24)
         with store.transaction() as db:
             db.execute(

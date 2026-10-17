@@ -55,7 +55,8 @@ class Store:
     @staticmethod
     def put_tx(db, owner: str, kind: str, value: dict):
         db.execute(
-            "INSERT INTO records VALUES (?,?,?,?) ON CONFLICT(owner,kind,id) DO UPDATE SET data=excluded.data",
+            "INSERT INTO records (owner,kind,id,data) VALUES (?,?,?,?) "
+            "ON CONFLICT(owner,kind,id) DO UPDATE SET data=excluded.data",
             (owner, kind, value["id"], json.dumps(value)),
         )
 
@@ -81,6 +82,10 @@ class Store:
     def delete(self, owner: str, kind: str, identifier: str):
         with self.transaction() as db:
             db.execute("DELETE FROM records WHERE owner=? AND kind=? AND id=?", (owner, kind, identifier))
+
+    def owners(self):
+        with self.transaction() as db:
+            return [row[0] for row in db.execute("SELECT DISTINCT owner FROM records").fetchall()]
 
     def event(self, owner: str, task_id: str, event_type: str, payload: dict):
         with self.transaction() as db:

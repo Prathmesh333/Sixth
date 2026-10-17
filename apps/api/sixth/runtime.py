@@ -3,9 +3,12 @@ from datetime import datetime, timedelta, timezone
 from threading import RLock
 from typing import TypedDict
 
+from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
+from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 from .connectors import build_menu, calendar, execute_cart, fingerprint
 from .memory import Memory
@@ -23,8 +26,17 @@ class Runtime:
     def __init__(self, store: Store, memory: Memory, planner: Planner):
         self.store, self.memory, self.planner = store, memory, planner
         self.lock = RLock()
-        self.connection = sqlite3.connect(store.path.parent / "checkpoints.sqlite", check_same_thread=False)
-        self.checkpointer = SqliteSaver(self.connection)
+        if getattr(store, "database_url", ""):
+            self.connection = ConnectionPool(
+                store.database_url, min_size=0, max_size=2, timeout=20,
+                check=ConnectionPool.check_connection,
+                kwargs={"autocommit": True, "row_factory": dict_row,
+                        "prepare_threshold": None, "connect_timeout": 10},
+            )
+            self.checkpointer = PostgresSaver(self.connection)
+        else:
+            self.connection = sqlite3.connect(store.path.parent / "checkpoints.sqlite", check_same_thread=False)
+            self.checkpointer = SqliteSaver(self.connection)
         self.checkpointer.setup()
         builder = StateGraph(State)
         builder.add_node("prepare", self.prepare)

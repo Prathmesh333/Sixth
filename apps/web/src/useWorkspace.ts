@@ -15,6 +15,7 @@ export function useWorkspace() {
   const [progress, setProgress] = useState('');
   const stream = useRef<EventSource | null>(null);
   const generation = useRef(0);
+  const demoCode = useRef('');
 
   const load = useCallback(async (conversationId?: string) => {
     const version = generation.current;
@@ -48,10 +49,11 @@ export function useWorkspace() {
 
   const report = (err: unknown) => setError(err instanceof Error ? err.message : 'Something went wrong. Please retry.');
 
-  async function login(account = 'alex') {
+  async function login(account = 'alex', accessCode?: string) {
+    if (accessCode !== undefined) demoCode.current = accessCode;
     setError(''); setBusy(true); stream.current?.close(); generation.current++;
     try {
-      const current = await api<Session>('/v1/session/demo', 'POST', { account });
+      const current = await api<Session>('/v1/session/demo', 'POST', { account, access_code: demoCode.current });
       setCsrf(current.csrf_token); setSession(current); setConversation(null); await load();
     } catch (err) { report(err); } finally { setBusy(false); }
   }

@@ -227,6 +227,9 @@ h1 em { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; color:
 .login-card > p { font-size: 14px; line-height: 1.9; color: var(--sixth-muted); margin: 28px 0; }
 .login-card > small { display: block; color: var(--sixth-muted); font-size: 10px; margin-top: 18px; }
 .login-card .button { font-size: 12px; min-height: 45px; }
+.login-card form { display: grid; gap: 12px; }
+.login-card label { font-size: 13px; }
+.login-card input { width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; color: var(--sixth-text); background: var(--sixth-background); border: 1px solid var(--sixth-muted); border-radius: 8px; }
 .login-card .error-text { color: var(--sixth-danger); font-size: 12px; }
 @keyframes breathe { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 @media (min-width: 1500px) { .context-shell { width: 300px; } .context-panel { padding: 35px 28px; } .welcome { max-width: 650px; } }

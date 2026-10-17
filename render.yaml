@@ -1,0 +1,40 @@
+# Create as a Blueprint, selecting the free instance. Secrets are entered in Render.
+services:
+  - type: web
+    name: sixth-api
+    runtime: python
+    plan: free
+    buildCommand: pip install uv==0.8.17 && uv sync --frozen --no-dev
+    startCommand: uv run --no-sync uvicorn sixth.main:app --app-dir apps/api --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health/ready
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.11
+      - key: SIXTH_DATABASE_URL
+        sync: false
+      - key: SIXTH_MEMORY_BACKEND
+        value: falkordb
+      - key: SIXTH_FALKORDB_HOST
+        sync: false
+      - key: SIXTH_FALKORDB_PORT
+        sync: false
+      - key: SIXTH_FALKORDB_USERNAME
+        sync: false
+      - key: SIXTH_FALKORDB_PASSWORD
+        sync: false
+      - key: SIXTH_FALKORDB_SSL
+        value: 'false'
+      - key: SIXTH_MODEL_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: SIXTH_MODEL_NAME
+        value: openai/gpt-oss-20b
+      - key: SIXTH_MODEL_API_KEY
+        sync: false
+      - key: SIXTH_DEMO_LOGIN
+        value: 'true'
+      - key: SIXTH_DEMO_ACCESS_CODE
+        generateValue: true
+      - key: SIXTH_COOKIE_SECURE
+        value: 'true'
+      - key: SIXTH_ALLOWED_ORIGINS
+        sync: false

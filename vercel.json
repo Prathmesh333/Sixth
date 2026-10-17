@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "apps/web/dist",
+  "framework": "vite",
+  "rewrites": [
+    {"source": "/v1/:path*", "destination": "https://sixth-api.onrender.com/v1/:path*"},
+    {"source": "/health/:path*", "destination": "https://sixth-api.onrender.com/health/:path*"},
+    {"source": "/((?!v1/|health/).*)", "destination": "/index.html"}
+  ]
+}

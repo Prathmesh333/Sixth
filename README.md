@@ -68,6 +68,8 @@ Current build: [implementation status and verification](docs/19-implementation-s
 
 New research: [Instinct evidence, Sixth capability gaps, and the messaging/agent implementation plan](docs/20-instinct-capability-map.md).
 
+Deployment: [Vercel, Render, Neon and FalkorDB hosted demo setup](docs/21-hosted-demo.md).
+
 1. [Executive recommendation](docs/00-executive-recommendation.md)
 2. [Product requirements](docs/01-product-requirements.md)
 3. [User journeys and acceptance criteria](docs/02-user-journeys.md)

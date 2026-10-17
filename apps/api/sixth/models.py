@@ -20,6 +20,7 @@ class Input(BaseModel):
 
 class DemoLogin(Input):
     account: Literal["alex", "jordan"] = "alex"
+    access_code: str = Field(default="", max_length=256)
 
 
 class MessageInput(Input):

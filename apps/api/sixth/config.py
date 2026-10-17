@@ -7,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SIXTH_", env_file=".env", extra="ignore")
     data_dir: Path = Path("data")
+    database_url: str = ""
+    demo_access_code: str = ""
     memory_backend: Literal["sqlite_fixture", "falkordb"] = "sqlite_fixture"
     falkordb_host: str = "127.0.0.1"
     falkordb_port: int = 6379
