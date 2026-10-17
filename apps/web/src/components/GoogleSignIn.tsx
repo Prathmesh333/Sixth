@@ -26,6 +26,7 @@ export function GoogleSignIn({ onCredential, busy }: { onCredential: (credential
   const [error, setError] = useState('');
   useEffect(() => {
     let cancelled = false;
+    let observer: ResizeObserver | undefined;
     async function setup() {
       try {
         const config = await api<{ google_client_id: string | null }>('/v1/auth/config');
@@ -37,18 +38,29 @@ export function GoogleSignIn({ onCredential, busy }: { onCredential: (credential
         if (cancelled || !container.current || !window.google) return;
         window.google.accounts.id.initialize({ client_id: config.google_client_id, nonce: challenge.nonce,
           auto_select: false, callback: response => { if (!cancelled) void onCredential(response.credential); } });
-        container.current.replaceChildren();
-        window.google.accounts.id.renderButton(container.current, {
-          theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with',
-          width: Math.min(360, container.current.parentElement?.clientWidth || 280),
-        });
+        let lastWidth = 0;
+        const render = () => {
+          if (!container.current || !window.google || cancelled) return;
+          const width = Math.min(360, container.current.parentElement?.clientWidth || 280);
+          if (width === lastWidth) return;
+          lastWidth = width;
+          container.current.replaceChildren();
+          window.google.accounts.id.renderButton(container.current, {
+            theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', width,
+          });
+        };
+        render();
+        if (container.current.parentElement) {
+          observer = new ResizeObserver(render);
+          observer.observe(container.current.parentElement);
+        }
         setState('ready');
       } catch (err) {
         if (!cancelled) { setState('error'); setError(err instanceof Error ? err.message : 'Google sign-in is unavailable.'); }
       }
     }
     void setup();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; observer?.disconnect(); };
   }, [onCredential]);
   return <div className="google-signin" aria-busy={busy || state === 'loading'}>
     <div ref={container} className="google-button-slot" hidden={state !== 'ready' || busy} />

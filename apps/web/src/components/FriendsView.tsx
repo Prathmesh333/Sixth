@@ -31,7 +31,7 @@ export function FriendsView() {
     <form className="friend-form" onSubmit={event => { event.preventDefault(); void act('/v1/friends', 'POST', { username }); }}>
       <label htmlFor="friend-username">Friend’s username</label>
       <input id="friend-username" autoCapitalize="none" autoComplete="off" spellCheck={false} pattern="[A-Za-z0-9_]{3,32}" minLength={3} maxLength={32} required value={username} onChange={event => setUsername(event.target.value)} placeholder="e.g. avery" />
-      <button className="button primary" disabled={busy || !data}>Send friend request</button>
+      <button type="submit" className="button primary" disabled={busy || !data}>Send friend request</button>
     </form>
     {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
     <section className="settings-section"><h2>Your people</h2>
