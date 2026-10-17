@@ -49,6 +49,11 @@ export function useWorkspace() {
 
   const report = (err: unknown) => setError(err instanceof Error ? err.message : 'Something went wrong. Please retry.');
 
+  const resumeSession = useCallback(async () => {
+    const current = await api<Session>('/v1/session');
+    setCsrf(current.csrf_token); setSession(current); setConversation(null); await load();
+  }, [load]);
+
   async function login(account = 'alex', accessCode?: string) {
     if (accessCode !== undefined) demoCode.current = accessCode;
     setError(''); setBusy(true); stream.current?.close(); generation.current++;
@@ -138,6 +143,6 @@ export function useWorkspace() {
   }
 
   return { session, starting, status, conversations, conversation, facts, plans, error, busy, progress,
-    login, send, decide, stop, newConversation, selectConversation, forget, correct, clearError: () => setError('') };
+    login, resumeSession, send, decide, stop, newConversation, selectConversation, forget, correct, clearError: () => setError('') };
 }
 export type Workspace = ReturnType<typeof useWorkspace>;

@@ -22,6 +22,7 @@ def test_consumer_workflow_and_responsive_layout():
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(os.environ.get("SIXTH_WEB_URL", "http://127.0.0.1:5173/"))
         page.wait_for_load_state("networkidle")
+        page.get_by_text("Private web demo", exact=True).click()
         page.get_by_role("button", name="Enter your local workspace").click()
         expect(page.get_by_role("heading", name="Your everyday, connected.")).to_be_visible()
         composer = page.get_by_role("textbox", name="Message Sixth")

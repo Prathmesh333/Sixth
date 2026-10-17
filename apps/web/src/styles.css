@@ -231,6 +231,12 @@ h1 em { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; color:
 .login-card label { font-size: 13px; }
 .login-card input { width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; color: var(--sixth-text); background: var(--sixth-background); border: 1px solid var(--sixth-muted); border-radius: 8px; }
 .login-card .error-text { color: var(--sixth-danger); font-size: 12px; }
+.whatsapp-connect { margin: 24px 0; padding: 20px; border: 1px solid var(--sixth-border); border-radius: 12px; }
+.whatsapp-connect h2 { font-size: 22px; margin-top: 0; }
+.whatsapp-connect p { font-size: 13px; line-height: 1.7; color: var(--sixth-muted); }
+.whatsapp-consent { display: flex; align-items: flex-start; gap: 10px; line-height: 1.6; }
+.login-card .whatsapp-consent input { width: 20px; min-height: 20px; height: 20px; flex-shrink: 0; }
+.login-card details summary { cursor: pointer; margin: 16px 0; font-size: 14px; }
 @keyframes breathe { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 @media (min-width: 1500px) { .context-shell { width: 300px; } .context-panel { padding: 35px 28px; } .welcome { max-width: 650px; } }
 @media (max-width: 1200px) { .context-shell { display: none; } .context-shell.expanded { display: block; position: fixed; right: 0; top: 76px; bottom: 0; background: var(--sixth-background); z-index: 20; box-shadow: -20px 0 40px #0002; } .context-panel:not(.evidence-open) .context-heading::after { content: 'ESC TO CLOSE'; font-size: 7px; } }

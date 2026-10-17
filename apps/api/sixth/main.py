@@ -23,6 +23,8 @@ from .planner import Planner
 from .postgres import PostgresStore
 from .runtime import Runtime
 from .storage import Store
+from .tasks import submit_message
+from .whatsapp import SYSTEM, WhatsApp
 
 
 def create_app(settings: Settings | None = None):
@@ -37,23 +39,29 @@ def create_app(settings: Settings | None = None):
     memory = Memory(store, settings)
     planner = Planner(settings)
     runtime = Runtime(store, memory, planner)
+    whatsapp = WhatsApp(store, runtime, settings)
     executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="sixth")
     mutation_lock = RLock()
 
     @asynccontextmanager
     async def lifespan(app):
         for owner in store.owners():
+            if owner == SYSTEM:
+                continue
             for task in store.list(owner, "task"):
                 if task["status"] in {"queued", "running"}:
                     executor.submit(runtime.run, owner, task["id"], task.get("decision"))
             runtime.project_outcomes(owner)
+        whatsapp.start()
         yield
+        whatsapp.close()
         executor.shutdown(wait=True)
         runtime.close()
         store.close()
 
     app = FastAPI(title="Sixth", version="0.1.0", lifespan=lifespan)
     app.state.store, app.state.memory, app.state.runtime = store, memory, runtime
+    app.state.whatsapp = whatsapp
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
@@ -169,9 +177,9 @@ def create_app(settings: Settings | None = None):
     def get_session(auth=Depends(session)):
         return {
             "account": auth["owner"],
-            "name": auth["owner"].title(),
+            "name": "Your Sixth" if auth["owner"].startswith("wa_") else auth["owner"].title(),
             "csrf_token": auth["csrf"],
-            "demo": True,
+            "demo": not auth["owner"].startswith("wa_"),
         }
 
     @app.get("/v1/status")
@@ -217,30 +225,9 @@ def create_app(settings: Settings | None = None):
             owned(owner, "source", source_id)
 
         def submit():
-            task_id, source_id = uid(), uid()
-            user_message = {
-                "id": source_id,
-                "conversation_id": conversation_id,
-                "role": "user",
-                "text": body.text,
-                "created_at": now(),
-            }
-            task = {
-                "id": task_id,
-                "conversation_id": conversation_id,
-                "text": body.text,
-                "source_id": source_id,
-                "status": "queued",
-                "plan_revision": 1,
-                "completed_action_ids": [],
-                "outstanding_steps": [],
-                "updated_at": now(),
-            }
-            with store.transaction() as db:
-                store.put_tx(db, owner, "message", user_message)
-                store.put_tx(db, owner, "task", task)
-                if conv["title"] == "New conversation":
-                    store.put_tx(db, owner, "conversation", {**conv, "title": body.text[:48]})
+            task_id = submit_message(store, owner, conversation_id, body.text)
+            if conv["title"] == "New conversation":
+                store.put(owner, "conversation", {**conv, "title": body.text[:48]})
             return {"task_id": task_id, "events_url": f"/v1/tasks/{task_id}/events"}
 
         result = request_key(owner, "message:" + conversation_id, idempotency_key, body.model_dump(), submit)
@@ -409,6 +396,7 @@ def create_app(settings: Settings | None = None):
             "carts": store.list(owner, "cart"),
         }
 
+    app.include_router(whatsapp.router(origin_check))
     web_dist = Path(__file__).resolve().parents[2] / "web" / "dist"
     if web_dist.is_dir():
         app.mount("/", StaticFiles(directory=web_dist, html=True), name="web")

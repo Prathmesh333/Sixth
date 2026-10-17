@@ -72,6 +72,8 @@ New research: [Instinct evidence, Sixth capability gaps, and the messaging/agent
 
 Deployment: [Vercel, Render, Neon and FalkorDB hosted demo setup](docs/21-hosted-demo.md).
 
+WhatsApp: [test integration, account setup and activation requirements](docs/22-whatsapp-integration.md). The connector is implemented; live messaging remains disabled pending Meta setup.
+
 1. [Executive recommendation](docs/00-executive-recommendation.md)
 2. [Product requirements](docs/01-product-requirements.md)
 3. [User journeys and acceptance criteria](docs/02-user-journeys.md)

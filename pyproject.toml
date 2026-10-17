@@ -14,6 +14,7 @@ dependencies = [
   "tzdata>=2026.5",
   "psycopg[binary,pool]>=3.2,<4",
   "langgraph-checkpoint-postgres>=3,<4",
+  "cryptography>=44,<47",
 ]
 
 [dependency-groups]
