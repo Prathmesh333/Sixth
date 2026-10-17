@@ -12,6 +12,24 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+def test_google_only_welcome_and_responsive_layout():
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True, channel=os.environ.get("SIXTH_BROWSER_CHANNEL", "chrome") or None)
+        page = browser.new_page(viewport={"width": 1440, "height": 1000})
+        page.goto(os.environ.get("SIXTH_WEB_URL", "http://127.0.0.1:5173/"))
+        expect(page.get_by_role("button", name="Continue with Google")).to_be_visible()
+        assert page.get_by_role("textbox").count() == 0
+        assert page.get_by_text("Private web demo", exact=True).count() == 0
+        page.add_script_tag(path="node_modules/axe-core/axe.min.js")
+        violations = page.evaluate("async () => (await axe.run(document, {runOnly: {type:'tag', values:['wcag2a','wcag2aa','wcag21aa']}})).violations")
+        assert violations == [], json.dumps(violations, indent=2)
+        for width in [320, 390, 768, 1440]:
+            page.set_viewport_size({"width": width, "height": 1000})
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Overflow at {width}"
+            page.screenshot(path=f"artifacts/sixth-welcome-{width}.png", full_page=True)
+        browser.close()
+
+
 def test_consumer_workflow_and_responsive_layout():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
@@ -22,8 +40,10 @@ def test_consumer_workflow_and_responsive_layout():
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(os.environ.get("SIXTH_WEB_URL", "http://127.0.0.1:5173/"))
         page.wait_for_load_state("networkidle")
-        page.get_by_text("Private web demo", exact=True).click()
-        page.get_by_role("button", name="Enter your local workspace").click()
+        base = os.environ.get("SIXTH_WEB_URL", "http://127.0.0.1:5173/").rstrip("/")
+        response = page.request.post(base + "/v1/session/demo", data={"account": "alex"}, headers={"Origin": base})
+        assert response.status == 200
+        page.reload()
         expect(page.get_by_role("heading", name="Your everyday, connected.")).to_be_visible()
         composer = page.get_by_role("textbox", name="Message Sixth")
 

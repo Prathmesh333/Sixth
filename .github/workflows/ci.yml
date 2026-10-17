@@ -28,7 +28,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install uv==0.8.17
       - run: uv sync --frozen
-      - run: uv run pytest tests/test_application.py tests/test_whatsapp.py -q
+      - run: uv run pytest tests/test_application.py tests/test_whatsapp.py tests/test_accounts.py -q
         env:
           SIXTH_TEST_DATABASE_URL: postgresql://sixth:test-only-password@localhost:5432/sixth_test
   application:
@@ -46,7 +46,7 @@ jobs:
       - run: uv sync --frozen
       - run: npm ci
       - run: uv run ruff check apps/api tests scripts
-      - run: uv run pytest tests/test_application.py tests/test_whatsapp.py -q
+      - run: uv run pytest tests/test_application.py tests/test_whatsapp.py tests/test_accounts.py -q
       - run: npm run build
   graph:
     runs-on: ubuntu-latest

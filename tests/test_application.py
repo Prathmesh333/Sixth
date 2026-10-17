@@ -24,7 +24,7 @@ def settings(tmp_path: Path):
         test_url = ""
     yield Settings(
         data_dir=tmp_path, database_url=test_url, memory_backend="sqlite_fixture",
-        model_api_key="", model_name="", demo_access_code="",
+        model_api_key="", model_name="", demo_access_code="", demo_login=True,
     )
     if database_url:
         with psycopg.connect(database_url, autocommit=True) as db:

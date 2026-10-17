@@ -63,6 +63,25 @@ export function useWorkspace() {
     } catch (err) { report(err); } finally { setBusy(false); }
   }
 
+  const signInGoogle = useCallback(async (credential: string) => {
+    setError(''); setBusy(true); stream.current?.close(); generation.current++;
+    try {
+      const current = await api<Session>('/v1/auth/google', 'POST', { credential, consent: true });
+      setCsrf(current.csrf_token); setConversation(null); setFacts([]); setPlans([]); setConversations([]);
+      await load(); setSession(current);
+    } catch (err) { setError(err instanceof Error ? err.message : 'Google sign-in failed. Please retry.'); }
+    finally { setBusy(false); }
+  }, [load]);
+
+  async function logout() {
+    setBusy(true); setError('');
+    try {
+      await api('/v1/session/logout', 'POST');
+      stream.current?.close(); generation.current++; setCsrf(''); demoCode.current = '';
+      setSession(null); setStatus(null); setConversation(null); setConversations([]); setFacts([]); setPlans([]); setProgress('');
+    } catch (err) { report(err); } finally { setBusy(false); }
+  }
+
   function watch(taskId: string, conversationId: string) {
     stream.current?.close();
     const version = generation.current;
@@ -72,9 +91,9 @@ export function useWorkspace() {
       const event = JSON.parse(message.data) as TaskEvent;
       if (generation.current !== version) { events.close(); return; }
       const labels: Record<string, string> = {
-        'task.started': 'Understanding your request…', 'context.retrieved': 'Connecting the relevant context…',
-        'plan.updated': 'Putting your plan together…', 'tool.started': 'Preparing your test cart…',
-        'memory.updated': 'Saving what matters…',
+        'task.started': 'Understanding your requestâ€¦', 'context.retrieved': 'Connecting the relevant contextâ€¦',
+        'plan.updated': 'Putting your plan togetherâ€¦', 'tool.started': 'Preparing your test cartâ€¦',
+        'memory.updated': 'Saving what mattersâ€¦',
       };
       setProgress(labels[event.type] || '');
       if (['input.required', 'task.completed', 'task.failed', 'task.cancelled'].includes(event.type)) {
@@ -91,7 +110,7 @@ export function useWorkspace() {
   async function send(text: string) {
     if (busy || !text.trim()) return;
     const version = generation.current;
-    setError(''); setBusy(true); setProgress('Understanding your request…');
+    setError(''); setBusy(true); setProgress('Understanding your requestâ€¦');
     try {
       let identifier = conversation?.id;
       if (!identifier) identifier = (await api<Conversation>('/v1/conversations', 'POST')).id;
@@ -143,6 +162,6 @@ export function useWorkspace() {
   }
 
   return { session, starting, status, conversations, conversation, facts, plans, error, busy, progress,
-    login, resumeSession, send, decide, stop, newConversation, selectConversation, forget, correct, clearError: () => setError('') };
+    login, signInGoogle, logout, resumeSession, send, decide, stop, newConversation, selectConversation, forget, correct, clearError: () => setError('') };
 }
 export type Workspace = ReturnType<typeof useWorkspace>;

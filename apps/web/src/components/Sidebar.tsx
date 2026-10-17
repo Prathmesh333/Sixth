@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ArrowUpRight, BrainCircuit, CalendarDays, MessageSquare, Plus, Settings2, X } from 'lucide-react';
+import { ArrowUpRight, BrainCircuit, CalendarDays, MessageSquare, Plus, Settings2, Users, X } from 'lucide-react';
 import type { View } from '../types';
 import type { Workspace } from '../useWorkspace';
 import { Mark } from './Brand';
@@ -26,6 +26,7 @@ export function Sidebar({ workspace: w, view, onView, open, onClose }: Props) {
         <button className={view === 'plans' ? 'active' : ''} onClick={() => navigate('plans')}><CalendarDays size={17} /> Your plans <span className="nav-count">{w.plans.length}</span></button>
         <button className={view === 'memory' ? 'active' : ''} onClick={() => navigate('memory')}><BrainCircuit size={17} /> Memory <span className="nav-count">{w.facts.length}</span></button>
       </nav>
+      {!w.session?.demo && <nav className="primary-nav" aria-label="People"><button className={view === 'friends' ? 'active' : ''} onClick={() => navigate('friends')}><Users size={17} /> Friends</button></nav>}
       <div className="recent-heading">RECENT CONVERSATIONS</div>
       <div className="recent-list">
         {w.conversations.length === 0 ? <p>Your next conversation<br />starts something useful.</p> : [...w.conversations].reverse().map(c =>
@@ -35,7 +36,7 @@ export function Sidebar({ workspace: w, view, onView, open, onClose }: Props) {
       <div className="sidebar-bottom">
         <div className="workspace-note"><span className="little-star">✳</span><p>A little more context.<br /><strong>A little less on your plate.</strong></p></div>
         <button className={view === 'settings' ? 'profile active' : 'profile'} onClick={() => navigate('settings')}>
-          <span className="avatar">{w.session?.name[0]}</span><span><strong>{w.session?.name}’s workspace</strong><small>Local demo · private to this account</small></span><Settings2 size={16} />
+          <span className="avatar">{w.session?.name[0]}</span><span><strong>{w.session?.name}’s workspace</strong><small>{w.session?.demo ? 'Shared demo account' : 'Personal account · private memories'}</small></span><Settings2 size={16} />
         </button>
         <a className="source-link" href="https://github.com/Prathmesh333/Sixth" target="_blank" rel="noreferrer">Built with context <ArrowUpRight size={12} /></a>
       </div>

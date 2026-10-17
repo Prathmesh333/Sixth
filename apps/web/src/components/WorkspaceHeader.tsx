@@ -1,7 +1,7 @@
 import { Menu, PanelRight } from 'lucide-react';
 import type { Status, View } from '../types';
 
-const titles: Record<View, string> = { chat: 'Conversation', plans: 'Plans', memory: 'Memory', settings: 'Settings' };
+const titles: Record<View, string> = { chat: 'Conversation', plans: 'Plans', memory: 'Memory', friends: 'Friends', settings: 'Settings' };
 
 export function WorkspaceHeader({ view, status, onNavigation, onContext }: {
   view: View; status: Status | null; onNavigation: () => void; onContext: () => void;

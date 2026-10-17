@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     data_dir: Path = Path("data")
     database_url: str = ""
     demo_access_code: str = ""
+    google_client_id: str = ""
     whatsapp_enabled: bool = False
     whatsapp_send_enabled: bool = False
     whatsapp_app_secret: str = ""
@@ -30,7 +31,7 @@ class Settings(BaseSettings):
     model_base_url: str = "https://api.openai.com/v1"
     model_api_key: str = ""
     model_name: str = ""
-    demo_login: bool = True
+    demo_login: bool = False
     cookie_secure: bool = False
     allowed_origins: list[str] = [
         "http://127.0.0.1:5173",

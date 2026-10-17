@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from redis.exceptions import RedisError
 
+from .accounts import ACCOUNTS, Accounts, PrivateResponses
 from .config import Settings
 from .connectors import calendar, fingerprint
 from .memory import Memory
@@ -40,13 +41,14 @@ def create_app(settings: Settings | None = None):
     planner = Planner(settings)
     runtime = Runtime(store, memory, planner)
     whatsapp = WhatsApp(store, runtime, settings)
+    accounts = Accounts(store, settings)
     executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="sixth")
     mutation_lock = RLock()
 
     @asynccontextmanager
     async def lifespan(app):
         for owner in store.owners():
-            if owner == SYSTEM:
+            if owner in {SYSTEM, ACCOUNTS}:
                 continue
             for task in store.list(owner, "task"):
                 if task["status"] in {"queued", "running"}:
@@ -62,6 +64,7 @@ def create_app(settings: Settings | None = None):
     app = FastAPI(title="Sixth", version="0.1.0", lifespan=lifespan)
     app.state.store, app.state.memory, app.state.runtime = store, memory, runtime
     app.state.whatsapp = whatsapp
+    app.add_middleware(PrivateResponses)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
@@ -80,9 +83,11 @@ def create_app(settings: Settings | None = None):
         with store.transaction() as db:
             row = db.execute("SELECT * FROM sessions WHERE token_hash=?", (digest,)).fetchone()
         if not row:
-            raise HTTPException(401, "Sign in to your local demo account")
+            raise HTTPException(401, "Sign in to Sixth")
+        if row["owner"] in {"alex", "jordan"} and not settings.demo_login:
+            raise HTTPException(401, "Sign in with Google to open your own Sixth")
         if (datetime.now(timezone.utc) - datetime.fromisoformat(row["created_at"])).total_seconds() > 86400:
-            raise HTTPException(401, "Your demo session expired")
+            raise HTTPException(401, "Your session expired. Sign in again.")
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             origin_check(request)
             if not secrets.compare_digest(request.headers.get("x-csrf-token", ""), row["csrf"]):
@@ -175,12 +180,7 @@ def create_app(settings: Settings | None = None):
 
     @app.get("/v1/session")
     def get_session(auth=Depends(session)):
-        return {
-            "account": auth["owner"],
-            "name": "Your Sixth" if auth["owner"].startswith("wa_") else auth["owner"].title(),
-            "csrf_token": auth["csrf"],
-            "demo": not auth["owner"].startswith("wa_"),
-        }
+        return accounts.describe(auth["owner"], auth["csrf"])
 
     @app.get("/v1/status")
     def status(auth=Depends(session)):
@@ -396,6 +396,7 @@ def create_app(settings: Settings | None = None):
             "carts": store.list(owner, "cart"),
         }
 
+    app.include_router(accounts.router(origin_check, session))
     app.include_router(whatsapp.router(origin_check))
     web_dist = Path(__file__).resolve().parents[2] / "web" / "dist"
     if web_dist.is_dir():

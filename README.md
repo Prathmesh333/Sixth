@@ -74,6 +74,8 @@ Deployment: [Vercel, Render, Neon and FalkorDB hosted demo setup](docs/21-hosted
 
 WhatsApp: [test integration, account setup and activation requirements](docs/22-whatsapp-integration.md). The connector is implemented; live messaging remains disabled pending Meta setup.
 
+Personal app: [phone-free accounts, friends and the Android path](docs/23-personal-react-app.md). React is the primary interface; WhatsApp is an optional future connection.
+
 1. [Executive recommendation](docs/00-executive-recommendation.md)
 2. [Product requirements](docs/01-product-requirements.md)
 3. [User journeys and acceptance criteria](docs/02-user-journeys.md)

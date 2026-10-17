@@ -11,6 +11,7 @@ import { PlansView } from './components/PlansView';
 import { SettingsView } from './components/SettingsView';
 import { WorkspaceHeader } from './components/WorkspaceHeader';
 import { Welcome } from './components/Welcome';
+import { FriendsView } from './components/FriendsView';
 
 function initialTheme(): Theme {
   try { const value = localStorage.getItem('sixth-theme'); return value === 'paper' || value === 'grove' ? value : 'dusk'; }
@@ -41,6 +42,7 @@ export function App() {
       <main id="main" className="main-content">
         {view === 'chat' && <Chat workspace={workspace} onEvidence={task => { setEvidence(task); setContextOpen(true); }} />}
         {view === 'memory' && <MemoryView workspace={workspace} onChat={() => navigate('chat')} />}
+        {view === 'friends' && <FriendsView key={workspace.session.account} />}
         {view === 'plans' && <PlansView workspace={workspace} onOpen={id => { if (id) void workspace.selectConversation(id); else workspace.newConversation(); navigate('chat'); }} />}
         {view === 'settings' && <SettingsView workspace={workspace} theme={theme} onTheme={setTheme} />}
       </main>

@@ -19,7 +19,7 @@ export function SettingsView({ workspace: w, theme, onTheme }: { workspace: Work
     { icon: Sparkles, title: 'Intelligence', detail: w.status?.planner.mode === 'model' ? w.status.planner.model : 'A deterministic local planner. No model API calls.', state: w.status?.planner.mode === 'model' ? 'Model configured' : 'Local planner' },
     { icon: Globe2, title: 'Calendar', detail: 'Sample events for the demo. A live calendar is not connected.', state: 'Sample data' },
     { icon: ShoppingBag, title: 'Shopping', detail: 'Prepare and verify a local test cart. No checkout or real purchases.', state: 'Sandbox' },
-    { icon: MessageSquare, title: 'WhatsApp', detail: 'Test connector prepared. Availability appears on the sign-in screen; Meta setup is required to activate it.', state: 'Test integration' },
+    { icon: MessageSquare, title: 'Sixth chat', detail: 'Chat directly in your own account. Conversations and memories follow you when you sign in.', state: 'Available' },
   ];
   return <div className="page-view settings-view"><div className="eyebrow">MAKE IT YOURS</div><h1>Comfortably<br /><em>in your control.</em></h1><p className="page-description">Choose how Sixth feels, and see exactly what’s connected.</p>
     <section className="settings-section"><h2>Appearance</h2><p>A quieter space for the way you think.</p><div className="theme-options">{(['dusk', 'paper', 'grove'] as const).map(option => <button className={`theme-option ${option} ${theme === option ? 'selected' : ''}`} aria-pressed={theme === option} onClick={() => onTheme(option)} key={option}>
@@ -29,5 +29,6 @@ export function SettingsView({ workspace: w, theme, onTheme }: { workspace: Work
     </section>
     <section className="settings-section"><h2>Your context belongs to you</h2><p>Download your saved memories, plans and test carts. Credentials are excluded.</p><button className="button secondary" onClick={() => void download()}><Download size={15} /> Export your context</button>{exportError && <p role="alert">{exportError}</p>}</section>
     {w.session?.demo && <section className="settings-section"><h2>Local demo accounts</h2><p>Switch accounts to check that memories and conversations stay separate.</p><div className="account-switch">{['alex', 'jordan'].map(account => <button className="button secondary" key={account} disabled={w.session?.account === account || w.busy} onClick={() => void w.login(account)}>{account[0].toUpperCase() + account.slice(1)} {w.session?.account === account && <Check size={14} />}</button>)}</div></section>}
+    <section className="settings-section"><h2>Your account</h2><p>Signed in as {w.session?.name}. Signing out removes this browser’s session.</p><button className="button secondary" disabled={w.busy} onClick={() => void w.logout()}>Sign out</button></section>
   </div>;
 }

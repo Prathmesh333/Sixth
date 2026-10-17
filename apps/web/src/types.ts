@@ -1,5 +1,5 @@
 export type Theme = 'dusk' | 'paper' | 'grove';
-export type View = 'chat' | 'memory' | 'plans' | 'settings';
+export type View = 'chat' | 'memory' | 'plans' | 'friends' | 'settings';
 export interface Session { account: string; name: string; csrf_token: string; demo: boolean }
 export interface Source { source_id: string; excerpt?: string; captured_at: string }
 export interface Fact {
