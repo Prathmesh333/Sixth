@@ -2,6 +2,8 @@
 
 **Your sixth sense for everyday life.**
 
+[Open the hosted synthetic demo](https://sixth-one.vercel.app/) · Enter the private access code configured in Render. [Deployment verification and limits](docs/21-hosted-demo.md).
+
 Sixth is a proposed consumer assistant inspired by the conversational experience at [Instinct](https://instinct.com/). It connects personal context, remembers decisions, and uses tools to carry out requests. FalkorDB supplies the relationships that change its plans and actions.
 
 Sixth now includes a working local application: React chat, sourced memory, persistent LangGraph workflows, dinner planning and a reviewed sandbox cart. The default is explicitly labeled fixture memory with a local planner. A native FalkorDB adapter and optional model endpoint are implemented; live service verification is tracked in the [implementation status](docs/19-implementation-status.md). Research references use pinned commits.

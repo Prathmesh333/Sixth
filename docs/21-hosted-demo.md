@@ -1,5 +1,20 @@
 # Hosted synthetic demo
 
+## Verified deployment — October 17, 2026
+
+- Frontend: https://sixth-one.vercel.app
+- Backend readiness: https://sixth-api.onrender.com/health/ready
+- Vercel Hobby and Render Free are in use. Render's health-check path is `/health/ready`.
+- Operational tables and native LangGraph checkpoints are initialized in Neon; client TLS was verified.
+- The deployed backend connects to the actual FalkorDB Cloud instance. Its data remains synthetic.
+- Browser login through the Vercel proxy and persisted memory rendering were verified with installed Chrome.
+- Live Groq intent parsing, sourced graph memory, a dinner proposal, SSE progress, explicit approval, verified sandbox cart creation and cross-account task isolation all passed through the production frontend URL.
+- Demo login is enabled only behind the user-set access code; the allowed browser origin is the exact frontend origin above. No credentials are included in this document.
+- Operational PostgreSQL now uses a bounded connection pool. Live testing also identified model predicate and subject aliases; these are normalized before graph retrieval and covered by a regression test.
+- All four jobs passed for backend commit `93ac69c` in [CI](https://github.com/Prathmesh333/Sixth/actions/runs/39036793623), including twelve application tests against PostgreSQL.
+
+The frontend was deployed directly through the Vercel CLI. GitHub auto-deployment is not connected because the Vercel account still needs its GitHub Login Connection. Future frontend changes can be published with `vercel deploy --prod`. Render updates can be published with its authenticated CLI. The deployed services are a private synthetic demo, not production user authentication or a WhatsApp integration.
+
 The hosted path uses Vercel Hobby for the frontend, Render Free for the Python API, Neon Free for operational PostgreSQL and LangGraph checkpoints, FalkorDB Cloud Free for graph context, and a Groq API key for model classification. Account creation alone does not establish a working deployment.
 
 ## Deployment sequence
@@ -32,4 +47,4 @@ Render Free can sleep and restart, so startup latency and interrupted requests a
 - A synthetic Groq intent request, validating returned JSON.
 - End-to-end Vercel proxy login, model-backed task, action review and verified sandbox outcome.
 
-Do not claim the final four gates passed until tested against the configured accounts. Provider credentials remain outside Git and logs. WhatsApp and public-profile sharing are separate unimplemented integrations.
+The deployment record above identifies the gates exercised against the configured accounts. Provider credentials remain outside Git and logs. WhatsApp and public-profile sharing are separate unimplemented integrations.

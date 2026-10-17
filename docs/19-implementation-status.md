@@ -4,6 +4,8 @@ October 16, 2026. This is the current implementation record; earlier design docu
 
 ## October 17 hosting preparation
 
+The synthetic demo is now deployed at [sixth-one.vercel.app](https://sixth-one.vercel.app). Live Neon, FalkorDB Cloud, Groq, proxy login, SSE and reviewed sandbox-cart execution were verified. Browser login and persisted memory rendering passed. The deployed backend uses a PostgreSQL connection pool and normalizes model aliases before graph retrieval. See the [hosted verification record](21-hosted-demo.md) for the current deployment and limits; the pending hosted checks described below refer to the earlier preparation stage.
+
 An optional PostgreSQL operational store and native PostgreSQL LangGraph checkpointer are implemented. The full eleven-test application suite passes against PostgreSQL in CI, including restart/resume and account isolation. SQLite remains the local default. Recovery discovers stored owners, and persisted approval decisions are resumed during restart recovery.
 
 Root `render.yaml` and `vercel.json` describe the free hosted demo path. The welcome screen accepts a private demo access code; this protects shared synthetic accounts and does not constitute individual production authentication. Render refuses startup without PostgreSQL and refuses enabled demo login without an access code. Provider secrets are entered by the user.
