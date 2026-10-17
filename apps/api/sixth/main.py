@@ -50,6 +50,7 @@ def create_app(settings: Settings | None = None):
         yield
         executor.shutdown(wait=True)
         runtime.close()
+        store.close()
 
     app = FastAPI(title="Sixth", version="0.1.0", lifespan=lifespan)
     app.state.store, app.state.memory, app.state.runtime = store, memory, runtime

@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
 
-import psycopg
+from psycopg_pool import ConnectionPool
 
 from .storage import Store
 
@@ -36,6 +36,11 @@ class Connection:
 class PostgresStore(Store):
     def __init__(self, database_url: str, path: Path):
         self.database_url, self.path, self.lock = database_url, path, RLock()
+        self.pool = ConnectionPool(
+            database_url, min_size=0, max_size=3, timeout=20, max_idle=60,
+            check=ConnectionPool.check_connection, open=True,
+            kwargs={"row_factory": record_row, "connect_timeout": 10, "prepare_threshold": None},
+        )
         with self.transaction() as db:
             for statement in (
                 "CREATE TABLE IF NOT EXISTS records (owner TEXT NOT NULL, kind TEXT NOT NULL, "
@@ -56,12 +61,13 @@ class PostgresStore(Store):
 
     @contextmanager
     def transaction(self):
-        with self.lock, psycopg.connect(
-            self.database_url, row_factory=record_row, connect_timeout=10, prepare_threshold=None
-        ) as connection:
+        with self.lock, self.pool.connection() as connection:
             connection.execute("SET LOCAL statement_timeout = '20s'")
             connection.execute("SELECT pg_advisory_xact_lock(73698401)")
             yield Connection(connection)
+
+    def close(self):
+        self.pool.close()
 
     def list(self, owner: str, kind: str):
         with self.transaction() as db:

@@ -52,6 +52,9 @@ class Store:
             finally:
                 db.close()
 
+    def close(self):
+        """Local SQLite connections are scoped to each transaction."""
+
     @staticmethod
     def put_tx(db, owner: str, kind: str, value: dict):
         db.execute(
