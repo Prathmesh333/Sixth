@@ -1,3 +1,4 @@
+import os
 import time
 from pathlib import Path
 
@@ -9,7 +10,25 @@ from sixth.main import create_app
 
 @pytest.fixture
 def settings(tmp_path: Path):
-    return Settings(data_dir=tmp_path, memory_backend="sqlite_fixture", model_api_key="", model_name="")
+    database_url = os.getenv("SIXTH_TEST_DATABASE_URL", "")
+    schema = "test_" + __import__("uuid").uuid4().hex
+    if database_url:
+        import psycopg
+        from psycopg import sql
+        from psycopg.conninfo import make_conninfo
+
+        with psycopg.connect(database_url, autocommit=True) as db:
+            db.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
+        test_url = make_conninfo(database_url, options=f"-c search_path={schema}")
+    else:
+        test_url = ""
+    yield Settings(
+        data_dir=tmp_path, database_url=test_url, memory_backend="sqlite_fixture",
+        model_api_key="", model_name="", demo_access_code="",
+    )
+    if database_url:
+        with psycopg.connect(database_url, autocommit=True) as db:
+            db.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
 
 
 def login(client, account="alex"):
@@ -248,3 +267,30 @@ def test_explicit_timezone_and_invalid_timezone(workspace):
         headers={**headers, "Idempotency-Key": "invalid-timezone"},
     )
     assert invalid.status_code == 422
+
+
+def test_hosted_demo_requires_access_code(settings):
+    settings.demo_access_code = "test-private-demo-code"
+    with TestClient(create_app(settings)) as client:
+        origin = {"Origin": "http://testserver"}
+        assert client.post("/v1/session/demo", json={"account": "alex"}, headers=origin).status_code == 403
+        assert client.post(
+            "/v1/session/demo", json={"account": "alex", "access_code": "wrong"}, headers=origin,
+        ).status_code == 403
+        response = client.post(
+            "/v1/session/demo",
+            json={"account": "alex", "access_code": settings.demo_access_code}, headers=origin,
+        )
+        assert response.status_code == 200
+        assert settings.demo_access_code not in response.text
+        assert settings.demo_access_code not in client.get("/v1/status").text
+
+
+def test_render_rejects_ephemeral_storage_and_unprotected_login(settings, monkeypatch):
+    monkeypatch.setenv("RENDER", "true")
+    settings.database_url = ""
+    with pytest.raises(RuntimeError, match="SIXTH_DATABASE_URL"):
+        create_app(settings)
+    settings.database_url = "postgresql://not-contacted/unused"
+    with pytest.raises(RuntimeError, match="SIXTH_DEMO_ACCESS_CODE"):
+        create_app(settings)

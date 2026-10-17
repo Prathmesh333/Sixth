@@ -2,6 +2,14 @@
 
 October 16, 2026. This is the current implementation record; earlier design documents describe the broader product target.
 
+## October 17 hosting preparation
+
+An optional PostgreSQL operational store and native PostgreSQL LangGraph checkpointer are implemented. The full ten-test application suite passes against PostgreSQL in CI, including restart/resume and account isolation. SQLite remains the local default. Recovery discovers stored owners, and persisted approval decisions are resumed during restart recovery.
+
+Root `render.yaml` and `vercel.json` describe the free hosted demo path. The welcome screen accepts a private demo access code; this protects shared synthetic accounts and does not constitute individual production authentication. Render refuses startup without PostgreSQL and refuses enabled demo login without an access code. Provider secrets are entered by the user.
+
+All four jobs pass in [the hosting-preparation CI run](https://github.com/Prathmesh333/Sixth/actions/runs/39008408715): application, PostgreSQL, graph and container. Local browser verification and the frontend build pass. Account-specific Neon, Groq, FalkorDB Cloud and Vercel-to-Render verification remain pending. See [deployment instructions](21-hosted-demo.md). Earlier references below to SQLite-only operation describe the initial local build.
+
 ## Working locally
 
 - React 19 + TypeScript + Vite interface with chat, Memory, Plans, Settings and an evidence panel.

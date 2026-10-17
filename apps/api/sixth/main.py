@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import secrets
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -26,6 +27,11 @@ from .storage import Store
 
 def create_app(settings: Settings | None = None):
     settings = settings or Settings()
+    if os.getenv("RENDER") == "true":
+        if not settings.database_url:
+            raise RuntimeError("Render requires SIXTH_DATABASE_URL; ephemeral SQLite is not allowed")
+        if settings.demo_login and not settings.demo_access_code:
+            raise RuntimeError("Hosted demo login requires SIXTH_DEMO_ACCESS_CODE")
     store_path = settings.data_dir / "sixth.sqlite"
     store = PostgresStore(settings.database_url, store_path) if settings.database_url else Store(store_path)
     memory = Memory(store, settings)
