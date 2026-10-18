@@ -63,3 +63,37 @@ The [database verification report](docs/24-database-verification.md) records the
 ## Documentation
 
 Start with the [documentation index](docs/README.md) for setup, architecture, API contracts, deployment, testing, and research. Product proposals are listed separately from implementation and verification records.
+
+## Hackathon: graph model and queries
+
+Tracks: **Agents That Act on Connected Data** and **Agent Memory and Coordination**.
+
+The implemented FalkorDB memory model uses these paths:
+
+```text
+(Person)-[:ATTENDS]->(Event)<-[:FOR_EVENT]-(Plan)-[:USES_RECIPE]->(Recipe)
+(Plan)-[:BASED_ON]->(Assertion)-[:HAS_SUBJECT]->(Person)
+(Assertion)-[:SUPPORTED_BY]->(Source)
+```
+
+An assertion stores its status, predicate, scope, version, and serialized fact payload. A source stores the original excerpt and capture time. The server selects a separate graph namespace for each user. PostgreSQL holds hosted accounts, conversations, and workflow state; FalkorDB supplies the connected memory used to build plans and their evidence.
+
+This is the event-context query executed by the [memory adapter](apps/api/sixth/memory.py):
+
+```cypher
+MATCH (p:Person)-[:ATTENDS]->(e:Event {id:$event_id}),
+      (a:Assertion)-[:HAS_SUBJECT]->(p),
+      (a)-[:SUPPORTED_BY]->(s:Source)
+WHERE a.status='confirmed'
+  AND (a.scope_type='person'
+       OR (a.scope_type='event' AND a.scope_id=$event_id))
+RETURN DISTINCT a.payload
+```
+
+The adapter also writes `BASED_ON` edges from plans to the assertions used in each revision. In FalkorDB mode, unavailable graph memory is reported as an error rather than replaced with fixture memory. The separate local fixture mode exists for development and tests. See [local setup](docs/getting-started.md), the [implemented adapter](apps/api/sixth/memory.py), and [graph integration tests](tests/test_falkordb.py). The broader [query examples](examples/graph/queries.cypher) include design templates beyond the implemented query above.
+
+The October 18 hosted demo exercised saved memory, a new-conversation dinner plan, a revision for six guests, the FalkorDB evidence panel, an approved sandbox cart, and a memory correction through Google sign-in. Demo people and dietary details are synthetic; recipes, pantry contents, and prices are sample data. No purchase was made.
+
+### AI assistance disclosure
+
+OpenAI Codex assisted with implementation, debugging, documentation, browser verification, and demo production. Gemini generated the demo narration. The demo uses recorded interactions with the hosted app. Verification records and current limitations are linked above.
