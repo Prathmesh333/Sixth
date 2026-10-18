@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from threading import RLock
+from threading import Event, RLock, Thread
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,8 +56,20 @@ def create_app(settings: Settings | None = None):
                 if task["status"] in {"queued", "running"}:
                     executor.submit(runtime.run, owner, task["id"], task.get("decision"))
             runtime.project_outcomes(owner)
+        recovery_stop = Event()
+        def recover():
+            while not recovery_stop.wait(15):
+                try:
+                    runtime.recover(lambda owner, task_id, decision: executor.submit(runtime.run, owner, task_id, decision))
+                except Exception:
+                    # A temporary database interruption is retried on the next pass.
+                    continue
+        recovery_thread = Thread(target=recover, daemon=True, name="sixth-task-recovery")
+        recovery_thread.start()
         whatsapp.start()
         yield
+        recovery_stop.set()
+        recovery_thread.join(timeout=30)
         whatsapp.close()
         executor.shutdown(wait=True)
         runtime.close()
@@ -297,6 +309,7 @@ def create_app(settings: Settings | None = None):
                     raise HTTPException(409, "The plan changed or this review expired. Request a fresh plan.")
                 item["decision"] = body.decision
                 item["status"] = "running"
+                item["updated_at"] = now()
                 store.put(owner, "task", item)
                 return {"accepted": True, "task_id": task_id}
 

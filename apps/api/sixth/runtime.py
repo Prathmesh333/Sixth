@@ -1,7 +1,7 @@
-import faulthandler
+import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from threading import RLock, Timer
+from threading import RLock
 from typing import TypedDict
 
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -29,6 +29,7 @@ class Runtime:
         self.store, self.memory, self.planner = store, memory, planner
         self.scheduling = Scheduling(store, memory)
         self.lock = RLock()
+        self.worker_id = uid()
         if getattr(store, "database_url", ""):
             self.connection = ConnectionPool(
                 store.database_url, min_size=0, max_size=2, timeout=20,
@@ -59,20 +60,76 @@ class Runtime:
     def config(self, owner: str, task_id: str):
         return {"configurable": {"thread_id": f"{owner}:{task_id}"}}
 
+    def recover(self, dispatch=None):
+        """Resume work whose worker disappeared, including during a rolling deploy."""
+        from .accounts import ACCOUNTS
+        from .scheduling import SCHEDULING
+        from .whatsapp import SYSTEM
+        for owner in self.store.owners():
+            if owner in {ACCOUNTS, SCHEDULING, SYSTEM}:
+                continue
+            for task in self.store.list(owner, "task"):
+                if task["status"] in {"queued", "running"}:
+                    lease = self.store.get(owner, "task_lease", task["id"]) or {}
+                    expiry = lease.get("expires_at")
+                    if not expiry or datetime.fromisoformat(expiry) <= datetime.now(timezone.utc):
+                        (dispatch or self.run)(owner, task["id"], task.get("decision"))
+
+    def claim(self, owner, task_id):
+        with self.store.transaction() as db:
+            row = db.execute("SELECT data FROM records WHERE owner=? AND kind='task' AND id=?", (owner, task_id)).fetchone()
+            if not row:
+                return False
+            task = json.loads(row[0])
+            if task["status"] not in {"queued", "running"}:
+                return False
+            lease_row = db.execute("SELECT data FROM records WHERE owner=? AND kind='task_lease' AND id=?", (owner, task_id)).fetchone()
+            lease = json.loads(lease_row[0]) if lease_row else {}
+            expiry = lease.get("expires_at")
+            if expiry and datetime.fromisoformat(expiry) > datetime.now(timezone.utc):
+                return False
+            self.store.put_tx(db, owner, "task_lease", {"id": task_id, "worker": self.worker_id,
+                              "expires_at": (datetime.now(timezone.utc) + timedelta(seconds=90)).isoformat()})
+            return True
+
+    def owns_lease(self, owner, task_id):
+        lease = self.store.get(owner, "task_lease", task_id) or {}
+        return lease.get("worker") == self.worker_id and bool(lease.get("expires_at")) and datetime.fromisoformat(lease["expires_at"]) > datetime.now(timezone.utc)
+
+    def renew(self, owner, task_id, release=False):
+        with self.store.transaction() as db:
+            row = db.execute("SELECT data FROM records WHERE owner=? AND kind='task_lease' AND id=?", (owner, task_id)).fetchone()
+            lease = json.loads(row[0]) if row else None
+            if lease and lease.get("worker") == self.worker_id:
+                lease.update(worker=None if release else self.worker_id,
+                             expires_at=None if release else (datetime.now(timezone.utc) + timedelta(seconds=90)).isoformat())
+                self.store.put_tx(db, owner, "task_lease", lease)
+
     def run(self, owner: str, task_id: str, decision: str | None = None):
         with self.lock:
+            if not self.claim(owner, task_id):
+                return
             task = self.store.get(owner, "task", task_id)
             if not task or task["status"] in {"cancelled", "completed", "failed"}:
                 return
-            watchdog = Timer(30, faulthandler.dump_traceback)
-            watchdog.daemon = True
-            watchdog.start()
+            from threading import Event, Thread
+            heartbeat_stop = Event()
+            def heartbeat():
+                while not heartbeat_stop.wait(20):
+                    try:
+                        self.renew(owner, task_id)
+                    except Exception:
+                        return
+            heartbeat_thread = Thread(target=heartbeat, daemon=True, name="sixth-task-lease")
+            heartbeat_thread.start()
             try:
                 self.graph.invoke(
                     Command(resume=decision) if decision else {"owner": owner, "task_id": task_id},
                     self.config(owner, task_id),
                 )
             except Exception as exc:
+                if not self.owns_lease(owner, task_id):
+                    return
                 task = self.store.get(owner, "task", task_id)
                 if task and task["status"] != "cancelled":
                     task.update(
@@ -96,7 +153,9 @@ class Runtime:
                     )
 
             finally:
-                watchdog.cancel()
+                heartbeat_stop.set()
+                heartbeat_thread.join(timeout=25)
+                self.renew(owner, task_id, release=True)
 
     def route(self, state: State):
         task = self.store.get(state["owner"], "task", state["task_id"])
@@ -124,6 +183,8 @@ class Runtime:
         intent = self.planner.parse(task["text"], history=history, memories=memories,
                                     scheduling_context=scheduling_context, timezone=task.get("timezone", "Asia/Calcutta"))
         self.store.event(owner, task_id, "planner.completed", {"kind": intent.kind})
+        if not self.owns_lease(owner, task_id):
+            raise RuntimeError("The task moved to another worker")
         task["intent"] = intent.model_dump()
         task["evidence"] = []
         if intent.kind == "remember":
@@ -282,6 +343,8 @@ class Runtime:
 
     def execute(self, state: State):
         owner, task_id = state["owner"], state["task_id"]
+        if not self.owns_lease(owner, task_id):
+            raise RuntimeError("The task moved to another worker")
         task = self.store.get(owner, "task", task_id)
         if task["status"] == "cancelled":
             return state

@@ -174,3 +174,41 @@ def test_group_needs_all_recipients_and_ai_rejection_has_no_effect(people,monkey
     assert post(a,ah,f"/v1/tasks/{task['id']}/decisions",payload).status_code == 202
     assert wait(a,task['id'])['reply']=='Nothing was sent or changed.'
     assert a.get('/v1/availability').json()['status']=='unknown'
+
+
+def test_worker_lease_blocks_duplicates_and_recovers_approved_action(people,monkeypatch):
+    from sixth.models import uid
+    from sixth.runtime import Runtime
+    from sixth.tasks import submit_message
+
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    runtime=a.app.state.runtime
+    owner=a.get('/v1/session').json()['account']
+    task_id=submit_message(runtime.store,owner,uid(),'I am vegetarian')
+    assert runtime.claim(owner,task_id)
+    second=Runtime(runtime.store,runtime.memory,runtime.planner)
+    try:
+        assert not second.claim(owner,task_id)
+        second.recover()
+        assert runtime.store.get(owner,'task',task_id)['status']=='queued'
+        runtime.renew(owner,task_id,release=True)
+        second.recover()
+        assert runtime.store.get(owner,'task',task_id)['status']=='completed'
+        assert runtime.store.get(owner,'task_lease',task_id)['worker'] is None
+        second.recover()
+        assert len(runtime.memory.current(owner)) == 1
+        # A lost worker may leave an already approved action awaiting execution.
+        monkeypatch.setattr(Planner,'parse',lambda *args,**kwargs: Intent(kind='scheduling',schedule_action='add_event',meeting_title=body['title'],starts_at=body['starts_at'],ends_at=body['ends_at']))
+        proposal={'id':submit_message(runtime.store,owner,uid(),'internal test')}
+        runtime.run(owner,proposal['id'])
+        pending=runtime.store.get(owner,'task',proposal['id'])
+        pending.update(status='running',decision='approve')
+        runtime.store.put(owner,'task',pending)
+        runtime.store.put(owner,'task_lease',{'id':proposal['id'],'worker':'lost-worker','expires_at':'2020-01-01T00:00:00+00:00'})
+        second.recover()
+        assert runtime.store.get(owner,'task',proposal['id'])['status']=='completed'
+        assert len(runtime.scheduling.own_events(owner))==1
+        second.recover()
+        assert len(runtime.scheduling.own_events(owner))==1
+    finally:
+        second.close()

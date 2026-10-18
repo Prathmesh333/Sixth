@@ -67,3 +67,7 @@ Unknown availability means the friend has not granted access. **No recorded conf
 - `POST /v1/scheduling/meeting/{id}/cancel`: cancellation for all participants.
 
 Writes require the existing session, origin check, and CSRF token. Request creation, responses, and confirmation also require an idempotency key. PostgreSQL transactions use the existing advisory lock to serialize conflict checks and booking writes.
+
+## Interrupted requests
+
+An active worker renews a 90-second database lease. A recovery check runs every 15 seconds. If a worker stops during a deployment, the replacement worker resumes queued or running tasks after the lease expires. Requests awaiting user approval remain paused. Stable action IDs prevent repeated slot creation when an approved action resumes.
