@@ -1,6 +1,7 @@
+import faulthandler
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from threading import RLock
+from threading import RLock, Timer
 from typing import TypedDict
 
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -63,6 +64,9 @@ class Runtime:
             task = self.store.get(owner, "task", task_id)
             if not task or task["status"] in {"cancelled", "completed", "failed"}:
                 return
+            watchdog = Timer(30, faulthandler.dump_traceback)
+            watchdog.daemon = True
+            watchdog.start()
             try:
                 self.graph.invoke(
                     Command(resume=decision) if decision else {"owner": owner, "task_id": task_id},
@@ -90,6 +94,9 @@ class Runtime:
                             "created_at": now(),
                         },
                     )
+
+            finally:
+                watchdog.cancel()
 
     def route(self, state: State):
         task = self.store.get(state["owner"], "task", state["task_id"])
