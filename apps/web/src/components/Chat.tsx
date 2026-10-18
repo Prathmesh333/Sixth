@@ -78,7 +78,7 @@ export function Chat({
 
   return (
     <div className={`chat-view ${welcome ? "is-welcome" : ""}`}>
-      <div ref={scroll} className="chat-scroll" aria-label="Conversation"
+      <div ref={scroll} className="chat-scroll" role="region" tabIndex={0} aria-label="Conversation"
         onScroll={event => {
           const area = event.currentTarget;
           follow.current = area.scrollHeight - area.scrollTop - area.clientHeight < 100;

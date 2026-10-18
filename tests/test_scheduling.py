@@ -212,3 +212,148 @@ def test_worker_lease_blocks_duplicates_and_recovers_approved_action(people,monk
         assert len(runtime.scheduling.own_events(owner))==1
     finally:
         second.close()
+
+
+def test_find_times_uses_both_schedules_and_hides_private_details(people):
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    service=a.app.state.runtime.scheduling
+    owner=a.get('/v1/session').json()['account']
+    start=datetime.fromisoformat(body['starts_at'])
+    end=start+timedelta(hours=4)
+    post(a,ah,'/v1/calendar/events',body)  # owner busy for first two hours
+    post(b,bh,'/v1/calendar/events',{**body,'title':'Secret friend appointment','starts_at':(start+timedelta(hours=2,minutes=30)).isoformat(),'ends_at':(start+timedelta(hours=3)).isoformat()})
+    unknown=service.find_times(owner,[bu],start.isoformat(),end.isoformat())
+    assert unknown['status']=='unknown' and unknown['suggested_slots']==[]
+    assert 'Secret' not in str(unknown)
+    b.put(f'/v1/friends/{friend}/sharing',headers=bh,json={'availability':True})
+    result=service.find_times(owner,[bu],start.isoformat(),end.isoformat())
+    assert result['status']=='options'
+    slots=result['suggested_slots']
+    assert len(slots)==3
+    assert datetime.fromisoformat(slots[0]['starts_at'])==start+timedelta(hours=2)
+    assert datetime.fromisoformat(slots[1]['starts_at'])==start+timedelta(hours=3)
+    assert all(datetime.fromisoformat(slot['ends_at'])<=end for slot in slots)
+    assert body['title'] not in str(result) and 'Secret' not in str(result)
+    short=service.find_times(owner,[bu],(start+timedelta(hours=2,minutes=3)).isoformat(),(start+timedelta(hours=2,minutes=10)).isoformat(),duration_minutes=5)
+    assert datetime.fromisoformat(short['suggested_slots'][0]['starts_at'])==start+timedelta(hours=2,minutes=3)
+
+
+def test_find_times_merges_blocks_and_respects_flags_event_and_duration(people):
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    service=a.app.state.runtime.scheduling
+    owner=a.get('/v1/session').json()['account']
+    start=datetime.fromisoformat(body['starts_at'])
+    event=post(a,ah,'/v1/calendar/events',body).json()
+    b.put(f'/v1/friends/{friend}/sharing',headers=bh,json={'availability':True})
+    post(b,bh,'/v1/calendar/events',{**body,'starts_at':(start+timedelta(hours=1)).isoformat(),'ends_at':(start+timedelta(hours=3)).isoformat()})
+    result=service.find_times(owner,[bu],start.isoformat(),(start+timedelta(hours=4)).isoformat(),duration_minutes=60,after_event_id=event['id'])
+    assert len(result['suggested_slots'])==1
+    assert datetime.fromisoformat(result['suggested_slots'][0]['starts_at'])==start+timedelta(hours=3)
+    assert result['after_event']['id']==event['id']
+    blocked=service.find_times(owner,[bu],start.isoformat(),(start+timedelta(hours=4)).isoformat(),duration_minutes=120)
+    assert blocked['status']=='no_times'
+    b.put('/v1/availability',headers=bh,json={'status':'away'})
+    assert service.find_times(owner,[bu],start.isoformat(),(start+timedelta(hours=4)).isoformat())['status']=='no_times'
+
+
+def test_search_then_pick_option_keeps_people_day_and_purpose(people,monkeypatch):
+    import httpx
+
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    b.put(f'/v1/friends/{friend}/sharing',headers=bh,json={'availability':True})
+    start=datetime.fromisoformat(body['starts_at'])
+    a.app.state.runtime.planner.settings.model_api_key='test-only-key'
+    a.app.state.runtime.planner.settings.model_name='openai/gpt-oss-20b'
+    requests=[]
+    def provider(request):
+        payload=__import__('json').loads(request.content)
+        context=next(__import__('json').loads(message['content'].split(': ',1)[1]) for message in payload['messages'] if message['content'].startswith('Internal profile scheduling data'))
+        requests.append(context)
+        if len(requests)==1:
+            intent=Intent(kind='scheduling',schedule_action='find_times',friend_usernames=[bu],starts_at=start.isoformat(),ends_at=(start+timedelta(hours=4)).isoformat(),meeting_title='Tea',duration_minutes=30)
+        else:
+            previous=context['recent_conversation_scheduling'][-1]
+            assert previous['friends']==[bu] and previous['title']=='Tea'
+            selected=previous['suggested_slots'][1]
+            intent=Intent(kind='scheduling',schedule_action='propose_meeting',friend_usernames=previous['friends'],meeting_title=previous['title'],**selected)
+        return httpx.Response(200,json={'choices':[{'message':{'content':intent.model_dump_json()}}]})
+    client_type=httpx.Client
+    monkeypatch.setattr(httpx,'Client',lambda **kwargs:client_type(transport=httpx.MockTransport(provider),**kwargs))
+    search,conversation=send(a,ah,'Invite Jules for tea today; check when we are available')
+    assert search['status']=='completed' and not search.get('action')
+    assert len(search['scheduling']['suggested_slots'])==4
+    assert a.get('/v1/scheduling/inbox').json()['items']==[]
+    selected, _=send(a,ah,'Invite them for the second option',conversation)
+    assert selected['status']=='awaiting_input'
+    assert selected['scheduling']['title']=='Tea'
+    assert selected['scheduling']['starts_at']==search['scheduling']['suggested_slots'][1]['starts_at']
+    assert a.get('/v1/scheduling/inbox').json()['items']==[]
+    assert approve(a,ah,selected,'approve-selected-time').status_code==202
+    wait(a,selected['id'])
+    invitation=b.get('/v1/scheduling/inbox').json()['items'][0]
+    assert invitation['title']=='Tea'
+    assert datetime.fromisoformat(invitation['starts_at'])==datetime.fromisoformat(selected['scheduling']['starts_at'])
+
+
+def test_after_event_uses_saved_end_and_busy_changes_block_proposal(people,monkeypatch):
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    event=post(a,ah,'/v1/calendar/events',body).json()
+    b.put(f'/v1/friends/{friend}/sharing',headers=bh,json={'availability':True})
+    def parse(*args,**kwargs):
+        return Intent(kind='scheduling',schedule_action='propose_meeting',friend_usernames=[bu],meeting_title='Tea',after_event_id=event['id'],duration_minutes=45)
+    monkeypatch.setattr(Planner,'parse',parse)
+    task,_=send(a,ah,'Invite Jules for tea immediately after my meeting')
+    assert task['status']=='awaiting_input'
+    assert task['scheduling']['starts_at']==event['ends_at']
+    assert datetime.fromisoformat(task['scheduling']['ends_at'])==datetime.fromisoformat(event['ends_at'])+timedelta(minutes=45)
+    post(b,bh,'/v1/calendar/events',{**body,'starts_at':task['scheduling']['starts_at'],'ends_at':task['scheduling']['ends_at']})
+    blocked,_=send(a,ah,'Invite Jules immediately after the same meeting')
+    assert blocked['status']=='completed' and not blocked.get('action')
+    assert 'conflict' in blocked['reply'] and a.get('/v1/scheduling/inbox').json()['items']==[]
+
+
+def test_search_without_sharing_or_date_never_invents_times(people,monkeypatch):
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    monkeypatch.setattr(Planner,'parse',lambda *args,**kwargs:Intent(kind='scheduling',schedule_action='find_times',friend_usernames=[bu],schedule_date='tomorrow',meeting_title='Tea'))
+    task,_=send(a,ah,'Check when Jules is available tomorrow')
+    assert task['scheduling']['status']=='unknown'
+    assert 'not shared availability' in task['reply']
+    assert not task.get('action') and not task['scheduling']['suggested_slots']
+    monkeypatch.setattr(Planner,'parse',lambda *args,**kwargs:Intent(kind='scheduling',schedule_action='find_times',friend_usernames=[bu]))
+    missing,_=send(a,ah,'Find time with Jules')
+    assert 'Which day' in missing['reply'] and not missing.get('action')
+
+
+def test_daytime_defaults_and_search_after_late_event_without_repeating_date(people,monkeypatch):
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    service=a.app.state.runtime.scheduling
+    period=service.search_window(Intent(kind='scheduling',schedule_action='find_times',schedule_date='tomorrow'),'Asia/Calcutta')
+    assert (period[0].hour,period[1].hour)==(9,21)
+    # A deliberate request after a late event can extend beyond the default hours.
+    day=datetime.fromisoformat(body['starts_at']).replace(hour=15,minute=30)
+    event=post(a,ah,'/v1/calendar/events',{**body,'starts_at':day.isoformat(),'ends_at':(day+timedelta(hours=2)).isoformat()}).json()
+    b.put(f'/v1/friends/{friend}/sharing',headers=bh,json={'availability':True})
+    monkeypatch.setattr(Planner,'parse',lambda *args,**kwargs:Intent(kind='scheduling',schedule_action='find_times',friend_usernames=[bu],after_event_id=event['id'],meeting_title='Tea'))
+    task,_=send(a,ah,'Find a time with Jules after my late event')
+    assert task['scheduling']['status']=='options'
+    assert len(task['scheduling']['suggested_slots'])==2
+    assert datetime.fromisoformat(task['scheduling']['suggested_slots'][0]['starts_at'])==datetime.fromisoformat(event['ends_at'])
+
+
+def test_invitation_rechecks_shared_conflict_after_user_review(people,monkeypatch):
+    import time
+
+    a,b,c,ah,bh,ch,au,bu,friend,body = people
+    b.put(f'/v1/friends/{friend}/sharing',headers=bh,json={'availability':True})
+    monkeypatch.setattr(Planner,'parse',lambda *args,**kwargs:Intent(kind='scheduling',schedule_action='propose_meeting',friend_usernames=[bu],starts_at=body['starts_at'],ends_at=body['ends_at'],meeting_title='Tea'))
+    task,_=send(a,ah,'Invite Jules for tea at the time we chose')
+    assert task['status']=='awaiting_input'
+    assert post(b,bh,'/v1/calendar/events',body).status_code==201
+    assert approve(a,ah,task,'review-with-later-conflict').status_code==202
+    for _ in range(150):
+        current=a.get(f"/v1/tasks/{task['id']}").json()
+        if current['status']=='failed':
+            break
+        time.sleep(.02)
+    assert current['status']=='failed' and 'availability changed' in current['reply']
+    assert b.get('/v1/scheduling/inbox').json()['items']==[]

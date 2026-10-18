@@ -9,7 +9,7 @@ export function SchedulingCard({
   onDecision: (decision: "approve" | "reject") => void;
 }) {
   const data = task.scheduling;
-  if (!data) return null;
+  if (!data || data.operation === "find_times") return null;
   return (
     <section className="schedule-card" aria-label="Scheduling review">
       <strong>{data.title}</strong>

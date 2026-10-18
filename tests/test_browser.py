@@ -259,10 +259,45 @@ def test_personal_availability_invite_accept_and_book():
         expect(page.get_by_text('Invitation from Browser-Avery · booked',exact=True)).to_be_visible()
         assert len(a.request.get(base+'/v1/calendar/events').json()['items'])==1
         assert len(b.request.get(base+'/v1/calendar/events').json()['items'])==1
+        assert b.request.put(base+f'/v1/friends/{friend}/sharing',headers=bh,data={'availability':True}).status==200
+        page.get_by_role('button',name='Start a new conversation',exact=True).click()
+        composer=page.get_by_role('textbox',name='Message Sixth',exact=True)
+        def chat(text):
+            composer.fill(text)
+            page.get_by_role('button',name='Send message',exact=True).click()
+        chat('Find a time for tea with Browser-Jules tomorrow')
+        expect(page.get_by_text('I found these 30-minute options',exact=False)).to_be_visible()
+        expect(page.locator('.message.assistant .message-markdown ol li')).to_have_count(4)
+        assert page.locator('.message.assistant .message-content').last.evaluate('node => getComputedStyle(node).borderTopWidth') == '1px'
+        assert page.locator('.message.assistant .message-content').last.evaluate('node => getComputedStyle(node).backgroundColor') != 'rgba(0, 0, 0, 0)'
+        conversation=a.request.get(base+'/v1/conversations').json()[-1]
+        detail=a.request.get(base+'/v1/conversations/'+conversation['id']).json()
+        slot=detail['tasks'][-1]['scheduling']['suggested_slots'][1]
+        assert len(a.request.get(base+'/v1/scheduling/inbox').json()['items'])==1
+        chat('Invite them for the second option')
+        expect(page.get_by_role('button',name='Send meeting invitation',exact=True)).to_be_visible()
+        assert len(a.request.get(base+'/v1/scheduling/inbox').json()['items'])==1
+        page.get_by_role('button',name='Send meeting invitation',exact=True).click()
+        expect(page.get_by_text("Sent to your friends' Sixth inboxes.",exact=False)).to_be_visible()
+        invitation=next(item for item in b.request.get(base+'/v1/scheduling/inbox').json()['items'] if item['title']=='Tea')
+        assert datetime.fromisoformat(invitation['starts_at'])==datetime.fromisoformat(slot['starts_at'])
+        other.get_by_role('button',name='Refresh inbox',exact=True).click()
+        tea=other.locator('.schedule-card').filter(has=other.get_by_text('Tea',exact=True))
+        tea.get_by_role('button',name='Accept',exact=True).click()
+        expect(tea.get_by_text('Invitation from Browser-Avery · ready to book',exact=True)).to_be_visible()
+        chat('Confirm the tea booking')
+        expect(page.get_by_role('button',name='Confirm meeting booking',exact=True)).to_be_visible()
+        # Completion must still appear if the final event stream disconnects.
+        page.route('**/v1/tasks/*/events',lambda route: route.fulfill(status=200,content_type='text/event-stream',body=': interrupted stream\n\n'))
+        page.get_by_role('button',name='Confirm meeting booking',exact=True).click()
+        expect(page.get_by_text("Booked in every participant's Sixth calendar",exact=False)).to_be_visible(timeout=10000)
+        assert len(a.request.get(base+'/v1/calendar/events').json()['items'])==2
+        assert len(b.request.get(base+'/v1/calendar/events').json()['items'])==2
+        page.screenshot(path='artifacts/sixth-conversational-scheduling-desktop.png',full_page=True)
         page.screenshot(path='artifacts/sixth-availability-desktop.png',full_page=True)
         page.set_viewport_size({'width':390,'height':844})
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-        page.screenshot(path='artifacts/sixth-availability-mobile.png',full_page=True)
+        page.screenshot(path='artifacts/sixth-conversational-scheduling-mobile.png',full_page=True)
         page.add_script_tag(path='node_modules/axe-core/axe.min.js')
         violations=page.evaluate("async () => (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations")
         assert violations==[], json.dumps([{'id':v['id'],'nodes':[n['target'] for n in v['nodes']]} for v in violations])

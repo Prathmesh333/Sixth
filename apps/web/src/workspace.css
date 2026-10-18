@@ -1163,3 +1163,21 @@
 .friend-card:has(.friend-sharing) {align-items: start;}
 .availability-view .friend-actions {flex-wrap: wrap; gap: 10px;}
 @media (max-width: 600px) {.availability-view .friend-actions .button {width: 100%;} .availability-form {max-width: 100%;}}
+
+/* Each assistant reply keeps its text, evidence and approval in one bubble. */
+.app-shell .message.assistant .message-content {
+  min-width: 0;
+  padding: 16px 20px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 4px 18px 18px 18px;
+  background: var(--sixth-surface);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--sixth-text) 3%, transparent);
+}
+.app-shell .message.assistant .message-content > .message-markdown > :last-child { margin-bottom: 0; }
+.app-shell .message.assistant .message-content .schedule-card,
+.app-shell .message.assistant .message-content .action-card { max-width: 100%; box-sizing: border-box; }
+@media (max-width: 600px) {
+  .app-shell .message.assistant .message-content { padding: 14px 16px; border-radius: 4px 15px 15px 15px; }
+}
+
+.app-shell .chat-scroll:focus-visible { outline: 2px solid var(--sixth-accent); outline-offset: -4px; border-radius: 12px; }

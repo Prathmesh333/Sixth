@@ -71,3 +71,13 @@ Writes require the existing session, origin check, and CSRF token. Request creat
 ## Interrupted requests
 
 An active worker renews a 90-second database lease. A recovery check runs every 15 seconds. If a worker stops during a deployment, the replacement worker resumes queued or running tasks after the lease expires. Requests awaiting user approval remain paused. Stable action IDs prevent repeated slot creation when an approved action resumes.
+
+## Find a time in chat
+
+Ask `Invite Jules for tea today; check when we are available.` Sixth checks your saved busy slots and Jules's permitted free/busy data. It returns up to four options without sending an invitation. Each assistant reply appears in a separate message bubble.
+
+Day searches use 9 AM to 9 PM in your timezone unless you request another range. The default visit lasts 30 minutes. Sixth shows the search window and duration with its suggestions.
+
+Reply `Invite them for the second option` or `Invite them at 4 PM`. Sixth carries the person, purpose, date, and duration into the proposal. You can also say `Find a time after my work review` or `Invite them immediately after my work review`. Sixth uses the saved event's end time. It asks for clarification when the event is not clear.
+
+Before sending the invitation, Sixth checks for new conflicts. A later booking still requires recipient acceptance and the organizer's final confirmation. If the friend has not shared availability, Sixth reports that limit and offers to prepare a question for a specific time.

@@ -1,7 +1,8 @@
 """Owned calendars, permissioned friend context, and recipient-approved meetings."""
 import hashlib
 import json
-from datetime import datetime, timedelta, timezone
+import math
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Literal
 from zoneinfo import ZoneInfo
 
@@ -45,6 +46,16 @@ class SharingInput(BaseModel):
 class ResponseInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     accepted: bool
+
+
+def timestamp(value):
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.utcoffset() is None:
+            raise ValueError()
+        return parsed
+    except (ValueError, AttributeError):
+        raise SchedulingError("Use a date and time with a timezone offset.") from None
 
 
 def window(starts_at, ends_at, zone="Asia/Calcutta"):
@@ -189,6 +200,130 @@ class Scheduling:
         return {"friend": label, "status": "busy" if events else flag if flag in {"busy", "away", "available"} else "no_recorded_conflict", "source": "sixth_calendar",
                 "busy": [{"starts_at": event["starts_at"], "ends_at": event["ends_at"]} for event in events]}
 
+    def blocks_tx(self, db, owner, start, end):
+        blocks = [(datetime.fromisoformat(event["starts_at"]), datetime.fromisoformat(event["ends_at"]))
+                  for event in self.events_tx(db, owner, start, end)]
+        flag = self.get(db, owner, "presence", "self") or {}
+        if flag.get("status") in {"busy", "away"}:
+            until = datetime.fromisoformat(flag["until"]) if flag.get("until") else end
+            since = datetime.fromisoformat(flag.get("updated_at", now()))
+            if since < end and until > start:
+                blocks.append((max(start, since), min(end, until)))
+        return blocks
+
+    def search_window(self, intent, zone):
+        if intent.starts_at and intent.ends_at:
+            return window(intent.starts_at, intent.ends_at, zone)
+        local = datetime.now(ZoneInfo(zone))
+        day = intent.schedule_date
+        if not day:
+            return None
+        try:
+            selected = local.date() + timedelta(days=day == "tomorrow") if day in {"today", "tomorrow"} else date.fromisoformat(day)
+        except ValueError:
+            raise SchedulingError("Which date should I check? Use today, tomorrow, or a date such as 2026-10-20.") from None
+        return datetime.combine(selected, time(9), ZoneInfo(zone)), datetime.combine(selected, time(21), ZoneInfo(zone))
+
+    def find_times(self, owner, usernames, starts_at, ends_at, zone="Asia/Calcutta", duration_minutes=30, after_event_id=""):
+        start, end = window(starts_at, ends_at, zone)
+        if not 5 <= duration_minutes <= 480:
+            raise SchedulingError("Choose a duration from 5 minutes to 8 hours.")
+        start = max(start, datetime.now(timezone.utc))
+        duration = timedelta(minutes=duration_minutes)
+        if start >= end:
+            raise SchedulingError("That search period has passed. Choose a future date or time.")
+        with self.store.transaction() as db:
+            after = None
+            if after_event_id:
+                event = self.get(db, owner, "calendar_event", after_event_id)
+                if not event or event.get("status") == "cancelled":
+                    raise SchedulingError("Which of your saved events should I plan after? Tell me its title and date.")
+                start = max(start, datetime.fromisoformat(event["ends_at"]))
+                after = {"id": event["id"], "title": event["title"], "ends_at": event["ends_at"]}
+            blocks = self.blocks_tx(db, owner, start, end) if start < end else []
+            friends, unknown = [], []
+            members = {owner}
+            for username in usernames:
+                relation, other = self.friend(db, owner, username=username)
+                if other in members:
+                    continue
+                members.add(other)
+                label = self.label(db, other)
+                friends.append(label)
+                if not relation.get("sharing", {}).get(other, {}).get("availability"):
+                    unknown.append(label)
+                elif start < end:
+                    blocks.extend(self.blocks_tx(db, other, start, end))
+        result = {"friends": friends, "unknown": unknown, "duration_minutes": duration_minutes, "timezone": zone,
+                  "starts_at": start.isoformat(), "ends_at": end.isoformat(), "after_event": after,
+                  "source": "shared_profile_availability", "suggested_slots": [], "open_windows": []}
+        if unknown:
+            return {**result, "status": "unknown"}
+        cursor, gaps = start, []
+        for a, b in sorted(blocks):
+            a, b = max(a, start), min(b, end)
+            if a > cursor:
+                gaps.append((cursor, a))
+            cursor = max(cursor, b)
+        if cursor < end:
+            gaps.append((cursor, end))
+        slots = []
+        for a, b in gaps:
+            if b - a < duration:
+                continue
+            candidate = datetime.fromtimestamp(math.ceil(a.timestamp() / 900) * 900, timezone.utc)
+            if candidate + duration > b:
+                candidate = datetime.fromtimestamp(math.ceil(a.timestamp() / 60) * 60, timezone.utc)
+            while candidate + duration <= b and len(slots) < 4:
+                slots.append({"starts_at": candidate.astimezone(ZoneInfo(zone)).isoformat(),
+                              "ends_at": (candidate + duration).astimezone(ZoneInfo(zone)).isoformat()})
+                candidate += duration
+        result.update(status="options" if slots else "no_times", suggested_slots=slots,
+                      open_windows=[{"starts_at": a.isoformat(), "ends_at": b.isoformat()} for a, b in gaps if b-a >= duration][:12])
+        return result
+
+    def prepare_search(self, owner, task, intent):
+        if not intent.friend_usernames:
+            task["reply"] = "Who would you like to meet? Tell me an accepted friend's name or Sixth username."
+            return
+        zone = task.get("timezone", "Asia/Calcutta")
+        if intent.after_event_id and not intent.schedule_date and not intent.starts_at:
+            event = self.store.get(owner, "calendar_event", intent.after_event_id)
+            if not event or event.get("status") == "cancelled":
+                raise SchedulingError("Which saved event should I look after? Tell me its title and date.")
+            intent.schedule_date = datetime.fromisoformat(event["ends_at"]).astimezone(ZoneInfo(zone)).date().isoformat()
+        period = self.search_window(intent, zone)
+        if not period:
+            task["reply"] = "Which day should I check? I can find a time today, tomorrow, or after one of your saved events."
+            return
+        if intent.after_event_id and not intent.ends_at:
+            event = self.store.get(owner, "calendar_event", intent.after_event_id)
+            if event and event.get("status") != "cancelled":
+                event_end = datetime.fromisoformat(event["ends_at"]).astimezone(ZoneInfo(zone))
+                if event_end >= period[1] and event_end.date() == period[1].date():
+                    period = (period[0], datetime.combine(event_end.date() + timedelta(days=1), time.min, ZoneInfo(zone)))
+        result = self.find_times(owner, intent.friend_usernames, *(value.isoformat() for value in period),
+                                 zone, intent.duration_minutes, intent.after_event_id)
+        task["scheduling"] = {"operation": "find_times", "title": intent.meeting_title or "Meetup",
+                              **result}
+        names = ", ".join(friend["name"] for friend in result["friends"])
+        # Keep canonical usernames separate from the display labels in the search result.
+        task["scheduling"]["friends"] = [friend["username"] for friend in result["friends"]]
+        if result["status"] == "unknown":
+            unknown = ", ".join(friend["name"] for friend in result["unknown"])
+            task["reply"] = f"{unknown} has not shared availability with you, so I cannot see their open times. Tell me a time to ask about, and I can prepare an availability question. Nothing has been sent."
+        elif result["status"] == "no_times":
+            task["reply"] = f"I couldn't find a shared {intent.duration_minutes}-minute opening with {names} in that period. Try a shorter visit, another day, or a later event. Nothing has been sent."
+        else:
+            def label(value):
+                return datetime.fromisoformat(value).astimezone(ZoneInfo(zone)).strftime("%a %d %b, %I:%M %p")
+            options = "\n".join(f"{index}. {label(slot['starts_at'])} to {datetime.fromisoformat(slot['ends_at']).astimezone(ZoneInfo(zone)).strftime('%I:%M %p')}"
+                                for index, slot in enumerate(result["suggested_slots"], 1))
+            after = f" after your {result['after_event']['title']}" if result["after_event"] else ""
+            task["reply"] = (f"I found these {intent.duration_minutes}-minute options with {names}{after} ({zone}):\n\n{options}\n\n"
+                             f"Search window: {label(result['starts_at'])} to {label(result['ends_at'])}. "
+                             "There are no saved conflicts at these times; your friend still needs to accept. Which time should I prepare an invitation for? You can also say 'after my meeting'. Nothing has been sent.")
+
     def create_request(self, owner, body, kind, identifier=None):
         start, end = window(body["starts_at"], body["ends_at"], body["timezone"])
         if start < datetime.now(timezone.utc):
@@ -205,6 +340,13 @@ class Scheduling:
                 _, other = self.friend(db, owner, username=username)
                 if other not in members:
                     members.append(other)
+            if kind == "meeting":
+                if self.conflicts_tx(db, owner, start, end):
+                    raise SchedulingError("Your availability changed and this time now conflicts. Find another time before inviting.")
+                for member in members[1:]:
+                    relation, _ = self.friend(db, owner, username=self.label(db, member)["username"])
+                    if relation.get("sharing", {}).get(member, {}).get("availability") and self.conflicts_tx(db, member, start, end):
+                        raise SchedulingError("A friend's shared availability changed and this time now conflicts. Find another time before inviting.")
             item = {"id": identifier, "kind": kind, "organizer": owner, "members": members,
                     "title": body["title"], "starts_at": start.isoformat(), "ends_at": end.isoformat(),
                     "timezone": body["timezone"], "status": "pending", "responses": {owner: "accepted"}, "created_at": now()}
@@ -308,6 +450,20 @@ class Scheduling:
 
     def prepare(self, owner, task, intent):
         operation = intent.schedule_action
+        if operation == "find_times" or (operation == "propose_meeting" and not intent.starts_at and intent.schedule_date and not intent.after_event_id):
+            self.prepare_search(owner, task, intent)
+            return
+        if operation == "propose_meeting" and intent.after_event_id:
+            event = self.store.get(owner, "calendar_event", intent.after_event_id)
+            if not event or event.get("status") == "cancelled":
+                raise SchedulingError("Which saved event do you mean? Tell me its title and date.")
+            if intent.starts_at and timestamp(intent.starts_at) < datetime.fromisoformat(event["ends_at"]):
+                task["reply"] = f"Your {event['title']} ends at {event['ends_at']}. Which time after that should I use? Nothing has been sent."
+                return
+            intent.starts_at = intent.starts_at or event["ends_at"]
+        if operation == "propose_meeting" and intent.starts_at and not intent.ends_at:
+            start, _ = window(intent.starts_at, (timestamp(intent.starts_at) + timedelta(minutes=intent.duration_minutes)).isoformat(), task.get("timezone", "Asia/Calcutta"))
+            intent.ends_at = (start + timedelta(minutes=intent.duration_minutes)).isoformat()
         if operation == "list_invitations":
             requests = self.inbox(owner)
             task["scheduling"] = {"operation": operation, "title": "Your scheduling inbox", "items": requests}
@@ -344,6 +500,18 @@ class Scheduling:
             with self.store.transaction() as db:
                 for username in intent.friend_usernames:
                     self.friend(db, owner, username=username)
+        if operation == "propose_meeting":
+            start, end = window(body["starts_at"], body["ends_at"], zone)
+            if start < datetime.now(timezone.utc):
+                task["reply"] = "That start time has passed. Should I find a later time today, or look tomorrow? Nothing has been sent."
+                return
+            with self.store.transaction() as db:
+                own_conflict = self.conflicts_tx(db, owner, start, end)
+            conflicts = [self.availability(owner, name, body["starts_at"], body["ends_at"], zone)
+                         for name in intent.friend_usernames]
+            if own_conflict or any(item["status"] in {"busy", "away"} for item in conflicts):
+                task["reply"] = "That time now conflicts with a saved busy slot or status. Nothing has been sent. Ask me to find another time, or choose a different slot."
+                return
         if intent.request_id:
             with self.store.transaction() as db:
                 kind = intent.request_kind if operation in {"accept_invitation", "decline_invitation"} else "meeting"
@@ -367,7 +535,7 @@ class Scheduling:
                           "plan_revision": 1, "evidence_ids": [], "mode": "sixth_calendar",
                           "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()}
         task["status"] = "awaiting_input"
-        task["reply"] = labels[operation] + "? Review the people and exact times below. Meeting invitations require recipient acceptance and a final organizer confirmation before booking."
+        task["reply"] = labels[operation] + "? Review the people and exact times below." + (" Each recipient must accept before the organizer confirms the booking." if operation in {"propose_meeting", "confirm_meeting"} else " Nothing changes until you approve.")
 
     def execute(self, owner, action):
         arguments = action["arguments"]
@@ -384,7 +552,7 @@ class Scheduling:
         elif operation in {"ask_availability", "propose_meeting"}:
             kind = "availability_request" if operation == "ask_availability" else "meeting"
             result = self.create_request(owner, body, kind, identifier)
-            reply = "Sent to your friends' Sixth inboxes. " + ("Their answers will appear in Calendar. No meeting has been booked." if kind == "availability_request" else "Each recipient must accept. Then you can confirm the booking in Calendar.")
+            reply = "Sent to your friends' Sixth inboxes. " + ("Their answers will appear in Availability. No meeting has been booked." if kind == "availability_request" else "Each recipient must accept. Then ask me to confirm the booking, or open Availability.")
         elif operation == "confirm_meeting":
             result = self.confirm(owner, arguments["request_id"])
             reply = "Booked in every participant's Sixth calendar after acceptance and a fresh conflict check. No external calendar was changed."

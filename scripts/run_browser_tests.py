@@ -92,7 +92,7 @@ def main():
             processes.append(web)
             ready(web_url, web)
             return subprocess.call(
-                [sys.executable, "-m", "pytest", "tests/test_browser.py", "-q"], cwd=ROOT, env=environment
+                [sys.executable, "-m", "pytest", "tests/test_browser.py", "-q", *sys.argv[1:]], cwd=ROOT, env=environment
             )
         finally:
             for process in reversed(processes):

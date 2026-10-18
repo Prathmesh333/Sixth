@@ -65,6 +65,7 @@ export interface Task {
   reply?: string;
   action?: Action;
   scheduling?: {
+    operation?: string;
     title: string;
     starts_at?: string;
     ends_at?: string;

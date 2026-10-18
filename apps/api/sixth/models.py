@@ -70,10 +70,13 @@ class Intent(Input):
     dairy_free: bool = False
     scope_type: Literal["person", "event"] = "person"
     response: str = ""
-    schedule_action: Literal["", "set_status", "add_event", "check_availability", "ask_availability", "propose_meeting", "list_invitations", "confirm_meeting", "accept_invitation", "decline_invitation", "cancel_meeting"] = ""
+    schedule_action: Literal["", "set_status", "add_event", "find_times", "check_availability", "ask_availability", "propose_meeting", "list_invitations", "confirm_meeting", "accept_invitation", "decline_invitation", "cancel_meeting"] = ""
     friend_usernames: list[str] = Field(default_factory=list, max_length=10)
     starts_at: str = ""
     ends_at: str = ""
     meeting_title: str = ""
     request_id: str = ""
     request_kind: Literal["meeting", "availability_request"] = "meeting"
+    schedule_date: str = Field(default="", max_length=10)
+    duration_minutes: int = Field(default=30, ge=5, le=480)
+    after_event_id: str = ""

@@ -15,15 +15,18 @@ export function useWorkspace() {
   const [progress, setProgress] = useState('');
   const stream = useRef<EventSource | null>(null);
   const generation = useRef(0);
+  const watchRevision = useRef(0);
   const demoCode = useRef('');
   const statusCache = useRef<Status | null>(null);
   const sending = useRef(false);
   const activeTask = useRef<string | null>(null);
-  const poll = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const poll = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  function closeStream() {
+  function closeStream(invalidate = true) {
+    if (invalidate) watchRevision.current++;
     stream.current?.close();
-    if (poll.current) clearTimeout(poll.current);
+    stream.current = null;
+    if (poll.current) clearInterval(poll.current);
     poll.current = null;
   }
 
@@ -67,7 +70,7 @@ export function useWorkspace() {
       } finally { if (!cancelled) setStarting(false); }
     }
     void start();
-    return () => { cancelled = true; stream.current?.close(); if (poll.current) clearTimeout(poll.current); };
+    return () => { cancelled = true; watchRevision.current++; stream.current?.close(); if (poll.current) clearInterval(poll.current); };
   }, [load]);
 
   const report = (err: unknown) => setError(err instanceof Error ? err.message : 'Something went wrong. Please retry.');
@@ -110,72 +113,75 @@ export function useWorkspace() {
     closeStream();
     activeTask.current = taskId;
     const version = generation.current;
+    const revision = watchRevision.current;
+    const current = () => version === generation.current && revision === watchRevision.current;
     let finishing = false;
+    let checking = false;
     async function finish() {
-      if (finishing || version !== generation.current) return;
+      if (finishing || !current()) return;
       finishing = true;
-      closeStream();
+      closeStream(false);
       try {
         const detail = await refreshConversation(conversationId, version);
-        if (version !== generation.current || !detail) return;
+        if (!current() || !detail) return;
         const task = detail.tasks.find(task => task.id === taskId);
         if (task?.evidence?.length || task?.plan) {
           const [memory, nextPlans] = await Promise.all([
             api<{ items: Fact[] }>('/v1/memory'), api<Plan[]>('/v1/plans'),
           ]);
-          if (version === generation.current) { setFacts(memory.items); setPlans(nextPlans); }
+          if (current()) { setFacts(memory.items); setPlans(nextPlans); }
         }
-      } catch (err) { if (version === generation.current) report(err); }
+      } catch (err) { if (current()) report(err); }
       finally {
-        if (version === generation.current) {
+        if (current()) {
           activeTask.current = null; sending.current = false; setBusy(false); setProgress('');
         }
       }
     }
     async function checkTask() {
-      if (version !== generation.current || finishing) return;
-      if (poll.current) clearTimeout(poll.current);
-      poll.current = null;
+      if (!current() || finishing || checking) return;
+      checking = true;
       try {
         const task = await api<Task>(`/v1/tasks/${taskId}`);
-        if (version !== generation.current || finishing) return;
+        if (!current() || finishing) return;
         if (['awaiting_input', 'completed', 'failed', 'cancelled'].includes(task.status)) {
           await finish(); return;
         }
         setProgress('Still working on your reply…');
       } catch (err) {
-        if (version !== generation.current) return;
+        if (!current()) return;
         if (err instanceof ApiError && [401, 404].includes(err.status)) {
-          report(err); closeStream(); sending.current = false; setBusy(false); return;
+          finishing = true;
+          report(err); closeStream(false); sending.current = false; setBusy(false); return;
         }
         setProgress('Reconnecting to your reply…');
-      }
-      if (version === generation.current && !finishing) poll.current = setTimeout(() => void checkTask(), 3000);
+      } finally { checking = false; }
     }
     const events = new EventSource(`/v1/tasks/${taskId}/events`);
     stream.current = events;
     events.onmessage = (message: MessageEvent<string>) => {
+      if (!current() || finishing) { events.close(); return; }
       const event = JSON.parse(message.data) as TaskEvent;
-      if (generation.current !== version) { events.close(); return; }
       const labels: Record<string, string> = {
         'task.started': 'Thinking about your request…', 'context.retrieved': 'Connecting the relevant context…',
-        'plan.updated': 'Putting your plan together…', 'tool.started': 'Preparing your test cart…',
+        'context.started': 'Checking saved context…', 'planner.started': 'Checking your request…',
+        'plan.updated': 'Putting your plan together…', 'tool.started': 'Applying your approved action…',
         'memory.updated': 'Saving what matters…',
       };
       if (labels[event.type]) setProgress(labels[event.type]);
       if (['input.required', 'task.completed', 'task.failed', 'task.cancelled'].includes(event.type)) {
-        // Reconnected streams replay earlier review events. Check current state
-        // before settling an action that may already be running again.
+        // A replayed review event cannot settle a resumed action: check its state.
         void checkTask();
       }
     };
     events.onerror = () => {
       events.close();
-      if (poll.current) clearTimeout(poll.current);
-      poll.current = null;
-      if (!finishing) void checkTask();
+      if (current() && !finishing) void checkTask();
     };
-    poll.current = setTimeout(() => { poll.current = null; void checkTask(); }, 12000);
+    // Poll independently of SSE callbacks. A stale stream or a replayed event
+    // must never clear the next task's fallback timer in this conversation.
+    poll.current = setInterval(() => void checkTask(), 3000);
+    void checkTask();
   }
 
   async function send(text: string) {

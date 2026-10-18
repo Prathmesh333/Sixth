@@ -179,6 +179,16 @@ class Runtime:
                 if message["conversation_id"] == task["conversation_id"]:
                     history.append(message)
         scheduling_context = self.scheduling.context(owner)
+        # Structured results keep follow-ups precise without asking the model to
+        # reconstruct dates, people or numbered options from rendered prose.
+        recent = []
+        for previous in self.store.list(owner, "task"):
+            if previous["id"] == task_id:
+                break
+            if previous["conversation_id"] == task["conversation_id"] and previous.get("scheduling"):
+                data = previous["scheduling"]
+                recent.append({key: data[key] for key in ("operation", "title", "friends", "duration_minutes", "starts_at", "ends_at", "timezone", "suggested_slots", "after_event") if key in data})
+        scheduling_context["recent_conversation_scheduling"] = recent[-5:]
         self.store.event(owner, task_id, "planner.started", {"mode": self.planner.mode})
         intent = self.planner.parse(task["text"], history=history, memories=memories,
                                     scheduling_context=scheduling_context, timezone=task.get("timezone", "Asia/Calcutta"))
