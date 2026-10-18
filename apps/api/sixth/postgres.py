@@ -61,7 +61,10 @@ class PostgresStore(Store):
 
     @contextmanager
     def transaction(self):
-        with self.lock, self.pool.connection() as connection:
+        # The database advisory lock already serializes transactions across workers.
+        # Let the thread-safe pool queue callers instead of a Python lock that a
+        # polling reader can repeatedly reacquire ahead of a waiting writer.
+        with self.pool.connection() as connection:
             connection.execute("SET LOCAL statement_timeout = '20s'")
             connection.execute("SELECT pg_advisory_xact_lock(73698401)")
             yield Connection(connection)

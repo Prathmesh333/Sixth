@@ -272,7 +272,7 @@ def create_app(settings: Settings | None = None):
                 if current["status"] in {"awaiting_input", "completed", "failed", "cancelled"}:
                     return
                 yield ": heartbeat\n\n"
-                time.sleep(0.25)
+                time.sleep(1.0 if settings.database_url else 0.25)
 
         return StreamingResponse(
             stream(),
