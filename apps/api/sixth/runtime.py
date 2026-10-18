@@ -14,7 +14,7 @@ from .connectors import build_menu, calendar, execute_cart, fingerprint
 from .memory import Memory
 from .models import FactInput, now, uid
 from .planner import ModelError, Planner
-from .scheduling import SchedulingError
+from .scheduling import Scheduling, SchedulingError
 from .storage import Store
 
 
@@ -26,6 +26,7 @@ class State(TypedDict):
 class Runtime:
     def __init__(self, store: Store, memory: Memory, planner: Planner):
         self.store, self.memory, self.planner = store, memory, planner
+        self.scheduling = Scheduling(store, memory)
         self.lock = RLock()
         if getattr(store, "database_url", ""):
             self.connection = ConnectionPool(

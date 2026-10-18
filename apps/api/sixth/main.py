@@ -23,7 +23,7 @@ from .models import CorrectionInput, DecisionInput, DemoLogin, FactInput, Messag
 from .planner import Planner
 from .postgres import PostgresStore
 from .runtime import Runtime
-from .scheduling import SCHEDULING, Scheduling
+from .scheduling import SCHEDULING
 from .storage import Store
 from .tasks import submit_message
 from .whatsapp import SYSTEM, WhatsApp
@@ -41,8 +41,7 @@ def create_app(settings: Settings | None = None):
     memory = Memory(store, settings)
     planner = Planner(settings)
     runtime = Runtime(store, memory, planner)
-    scheduling = Scheduling(store, memory)
-    runtime.scheduling = scheduling
+    scheduling = runtime.scheduling
     whatsapp = WhatsApp(store, runtime, settings)
     accounts = Accounts(store, settings)
     executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="sixth")
