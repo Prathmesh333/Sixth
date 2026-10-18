@@ -103,6 +103,7 @@ class Runtime:
         task.update(status="running", updated_at=now())
         self.store.put(owner, "task", task)
         self.store.event(owner, task_id, "task.started", {"planner": self.planner.mode})
+        self.store.event(owner, task_id, "context.started", {})
         memories = self.memory.current(owner) if self.planner.mode == "model" else []
         history = []
         if self.planner.mode == "model":
@@ -111,8 +112,11 @@ class Runtime:
                     break
                 if message["conversation_id"] == task["conversation_id"]:
                     history.append(message)
+        scheduling_context = self.scheduling.context(owner)
+        self.store.event(owner, task_id, "planner.started", {"mode": self.planner.mode})
         intent = self.planner.parse(task["text"], history=history, memories=memories,
-                                    scheduling_context=self.scheduling.context(owner), timezone=task.get("timezone", "Asia/Calcutta"))
+                                    scheduling_context=scheduling_context, timezone=task.get("timezone", "Asia/Calcutta"))
+        self.store.event(owner, task_id, "planner.completed", {"kind": intent.kind})
         task["intent"] = intent.model_dump()
         task["evidence"] = []
         if intent.kind == "remember":
