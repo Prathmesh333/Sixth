@@ -1,115 +1,63 @@
 # Sixth
 
-**Your sixth sense for everyday life.**
+**Less on your mind. More room for life.**
 
-[Open the hosted synthetic demo](https://sixth-one.vercel.app/) · Enter the private access code configured in Render. [Deployment verification and limits](docs/21-hosted-demo.md).
+Sixth is a personal assistant that remembers the context behind your requests. Tell Sixth about a preference, then use that preference in a later conversation. You can inspect the source of a memory, correct the memory, and review a proposed action before it runs.
 
-Sixth is a proposed consumer assistant inspired by the conversational experience at [Instinct](https://instinct.com/). It connects personal context, remembers decisions, and uses tools to carry out requests. FalkorDB supplies the relationships that change its plans and actions.
+[Open Sixth](https://sixth-one.vercel.app/) · [Documentation](docs/README.md) · [Local setup](docs/getting-started.md)
 
-Sixth now includes a working local application: React chat, sourced memory, persistent LangGraph workflows, dinner planning and a reviewed sandbox cart. The default is explicitly labeled fixture memory with a local planner. A native FalkorDB adapter and optional model endpoint are implemented; live service verification is tracked in the [implementation status](docs/19-implementation-status.md). Research references use pinned commits.
+![Sixth landing page with the animated petal mark and the headline, Less on your mind. More room for life.](docs/assets/sixth-landing.png)
 
-## Run Sixth locally
+## What Sixth does
 
-Requirements: Node.js 22 and [uv](https://docs.astral.sh/uv/). The lockfile selects Python 3.12.
+Sixth connects people, preferences, events, and plans through a memory graph. The current application demonstrates that connection through dinner planning and a sandbox shopping cart.
 
-```powershell
-uv sync --frozen
-npm ci
-Copy-Item .env.example .env
-```
+For example, tell Sixth, `Maya is vegetarian.` In a new conversation, ask, `Plan Maya's birthday dinner for four.` Sixth uses the saved preference when it selects a recipe. If two more guests join, Sixth can revise the quantities. A temporary restriction can apply to that dinner without replacing Maya's saved preference.
 
-Start the API and frontend in separate terminals:
+Select **Why this plan?** to inspect the evidence. Select **Prepare test cart** to approve the sandbox action. The cart does not place a real order.
 
-```powershell
-npm run dev:api
-```
+## Inside the app
 
-```powershell
-npm run dev
-```
+- Chat across saved conversations and receive streamed task updates.
+- Review sourced memories, correct preferences, and forget selected memories.
+- Create dinner plans with guest quantities, dietary restrictions, and sample pantry data.
+- Inspect the sources that informed a plan before you approve a test cart.
+- Use Google sign-in and manage friend requests by username. Friendship does not share private memories or conversations.
+- Choose Paper, Dusk, or Grove. The interface supports narrow screens, keyboard controls, and reduced motion.
 
-Open [Sixth](http://127.0.0.1:5173/). Choose the local Alex account. Try these messages in order:
+The landing page includes a scroll-driven product demonstration and an animated technology wheel.
 
-1. `Maya is vegetarian.`
-2. Start a new conversation, then `Plan Maya's birthday dinner for four.`
-3. `Two more people are joining and Maya avoids dairy for this dinner.`
-4. Review **Prepare test cart**, then inspect **Why this plan?**
+![Sixth workspace with the conversation area, sidebar, and message composer.](docs/assets/sixth-workspace.png)
 
-Preferences, plans and cart results survive restarts. The calendar, recipe catalog, pantry and prices are sample data. A sandbox cart is a real local state change, never a real purchase. Demo accounts are for private localhost use, not production authentication.
+## How memory works
 
-## Connect the real graph and a model
+FalkorDB stores the connections between people, preferences, sources, events, and plans. A plan links to the memories that informed it. This lets Sixth retrieve relevant context and show the reason for a choice.
 
-To use an existing FalkorDB server, set `SIXTH_MEMORY_BACKEND=falkordb` and the `SIXTH_FALKORDB_*` fields in `.env`, then restart the API. FalkorDB mode does not silently fall back to SQLite. Fixture facts are not automatically migrated to a live graph.
+The operational database stores accounts, sessions, messages, tasks, and workflow progress. The hosted app uses PostgreSQL. Local development uses SQLite unless you configure PostgreSQL. These stores have different roles; the app does not copy every chat message into FalkorDB.
 
-With Docker available, the root Compose configuration builds the application and starts FalkorDB:
+| Part | Technology |
+| --- | --- |
+| Interface | React, TypeScript, Vite, CSS |
+| API | Python, FastAPI |
+| Persistent workflows | LangGraph |
+| Connected memory | FalkorDB |
+| Operational storage | PostgreSQL when hosted; SQLite by default locally |
+| Optional intent parsing | An OpenAI-compatible model endpoint |
 
-```powershell
-docker compose up --build
-```
+The default local configuration uses fixture memory and a deterministic planner. Configure FalkorDB to use the real memory graph. FalkorDB mode does not silently fall back to fixture memory.
 
-Open [Sixth with the graph backend](http://127.0.0.1:8000/) and [FalkorDB Browser](http://127.0.0.1:3000/). [CI verifies the container path and real graph integration](https://github.com/Prathmesh333/Sixth/actions/runs/38935709597); Docker is unavailable on the Windows development host. The database image is pinned to the tested service digest. This remains a private local demo, not a production deployment.
+## Try Sixth
 
-To enable model-assisted intent parsing, set `SIXTH_MODEL_BASE_URL`, `SIXTH_MODEL_NAME`, and `SIXTH_MODEL_API_KEY` server-side. Without those settings, the supported local intents remain usable. No model credentials go to the browser. A live model call has not been verified yet.
+[Open the hosted app](https://sixth-one.vercel.app/) to view the landing page and use Google sign-in. A live Google account check verified message sending, sourced memory, and persistence after reload. Hosted Alex and Jordan demo login is disabled.
 
-## Verify
+To run the app yourself, follow the [local setup guide](docs/getting-started.md). The guide covers Google sign-in, a local sample-account session, FalkorDB, model configuration, and checks.
 
-```powershell
-uv run pytest tests/test_application.py -q
-uv run ruff check apps/api tests scripts
-npm run build
-npm run test:e2e
-```
+## Current scope
 
-The browser runner starts its own isolated servers and fixture data. It defaults to installed Google Chrome. For bundled Chromium, run `uv run playwright install chromium` and set `SIXTH_BROWSER_CHANNEL` to an empty string. Screenshots and logs go to ignored `artifacts/`.
+The calendar, recipe catalog, pantry, and prices use sample data. The shopping flow prepares a sandbox cart. Real purchases, bookings, live calendar access, voice, and general browser actions are outside the current implementation. WhatsApp has an optional test connector, but live messaging is disabled.
 
-For an existing real FalkorDB server, set `SIXTH_GRAPH_TEST=1` and run `uv run pytest tests/test_falkordb.py -q`. The dedicated GitHub Actions graph job also runs this test with a database service. Runtime API documentation is served at `/docs`; the original `specs/openapi.json` remains the broader design contract.
+The [database verification report](docs/24-database-verification.md) records the latest checks and limits. Local SQLite application tests and real FalkorDB integration tests passed. A fresh hosted demo-account workflow remains unverified because demo login is disabled. The latest local PostgreSQL suite did not complete.
 
-## Read first
+## Documentation
 
-Current build: [implementation status and verification](docs/19-implementation-status.md).
-
-New research: [Instinct evidence, Sixth capability gaps, and the messaging/agent implementation plan](docs/20-instinct-capability-map.md).
-
-Deployment: [Vercel, Render, Neon and FalkorDB hosted demo setup](docs/21-hosted-demo.md).
-
-WhatsApp: [test integration, account setup and activation requirements](docs/22-whatsapp-integration.md). The connector is implemented; live messaging remains disabled pending Meta setup.
-
-Personal app: [phone-free accounts, friends and the Android path](docs/23-personal-react-app.md). React is the primary interface; WhatsApp is an optional future connection.
-
-1. [Executive recommendation](docs/00-executive-recommendation.md)
-2. [Product requirements](docs/01-product-requirements.md)
-3. [User journeys and acceptance criteria](docs/02-user-journeys.md)
-4. [System architecture](docs/03-system-architecture.md)
-5. [FalkorDB integration and graph schema](docs/04-falkordb-design.md)
-6. [Memory lifecycle](docs/05-memory-lifecycle.md)
-7. [Agent orchestration and execution](docs/06-agent-runtime.md)
-8. [Integrations and tool contracts](docs/07-integrations.md)
-9. [API and event contracts](docs/08-api-contracts.md)
-10. [Codebase structure](docs/09-repository-structure.md)
-11. [Interface, brand, and themes](docs/10-design-and-themes.md)
-12. [Security, privacy, and user control](docs/11-security-and-privacy.md)
-13. [Evaluation and test plan](docs/12-evaluation.md)
-14. [Build plan and backlog](docs/13-build-plan.md)
-15. [Deployment and operations](docs/14-deployment-and-operations.md)
-16. [Demo and submission](docs/15-demo-and-submission.md)
-17. [Product strategy and costs](docs/16-product-strategy.md)
-18. [Architecture decisions](docs/17-architecture-decisions.md)
-19. [Risks and open decisions](docs/18-risks-and-decisions.md)
-20. [Research synthesis](docs/research/README.md), [comparison](docs/research/comparison.md), and [15 repository reviews](docs/research/repositories/)
-21. [Source register](docs/research/sources.md) and [machine-readable evidence manifest](docs/research/evidence-manifest.json)
-
-## Supporting artifacts
-
-- [OpenAPI contract](specs/openapi.json) and [structured data schemas](specs/contracts.json)
-- [Illustrative graph seed](examples/graph/seed.cypher), [queries](examples/graph/queries.cypher), and [client example](examples/graph/query_example.py)
-- [Proposed operational SQL schema](examples/infra/operational-schema.sql)
-- [Local FalkorDB infrastructure example](examples/infra/compose.yaml) and [environment template](examples/infra/.env.example)
-- [Three visual themes](design/themes.css) and [semantic tokens](design/tokens.json)
-- [Synthetic demo fixture](examples/fixtures/birthday-dinner.json)
-- [Documentation validation report](docs/validation-report.md)
-
-## Product boundaries
-
-The product is broad; the hackathon implementation is one complete loop across calendar, meal planning, and a test shopping cart. Travel, gifts, voice, and additional messaging channels are planned extensions. No real purchase, booking, or message is implied by a generated plan.
-
-Target Track 01 (connected-data actions) and Track 02 (persistent memory and coordination). Do not claim consumer knowledge automatically qualifies for Company Brain. [Official event brief](https://www.wemakedevs.org/hackathons/falkordb).
+Start with the [documentation index](docs/README.md) for setup, architecture, API contracts, deployment, testing, and research. Product proposals are listed separately from implementation and verification records.

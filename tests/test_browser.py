@@ -20,12 +20,66 @@ def test_google_only_welcome_and_responsive_layout():
         expect(page.get_by_role("button", name="Continue with Google")).to_be_visible()
         assert page.get_by_role("textbox").count() == 0
         assert page.get_by_text("Private web demo", exact=True).count() == 0
+        page.locator("#experience").evaluate("section => window.scrollTo({top: scrollY + section.getBoundingClientRect().top + (section.offsetHeight - innerHeight) * 0.85, behavior: 'instant'})")
+        expect(page.locator(".lp-demo-window")).to_have_attribute("data-step", "3")
+        page.set_viewport_size({"width": 686, "height": 664})
+        page.locator("#experience").evaluate("section => window.scrollTo({top: scrollY + section.getBoundingClientRect().top, behavior: 'instant'})")
+        expect(page.locator(".lp-demo-window")).to_have_attribute("data-step", "0")
+        page.locator("#experience").evaluate("section => window.scrollTo({top: scrollY + section.getBoundingClientRect().top + (section.offsetHeight - innerHeight) * 0.6, behavior: 'instant'})")
+        expect(page.locator(".lp-demo-window")).to_have_attribute("data-step", "2")
+        expect(page.get_by_role("heading", name="People change. Context can too.", exact=True)).to_be_visible()
+        page.set_viewport_size({"width": 1440, "height": 1000})
+        page.get_by_role("button", name="Pause logo animation", exact=True).click()
+        expect(page.get_by_role("button", name="Resume logo animation", exact=True)).to_have_attribute("aria-pressed", "true")
+        expect(page.locator(".lp-tech-wheel")).to_have_attribute("data-running", "false")
+        expect(page.locator(".lp-tech-rotor a")).to_have_count(8)
+        for logo in page.locator(".lp-tech-wheel img").all():
+            expect(logo).to_have_js_property("complete", True)
+            assert logo.evaluate("image => image.naturalWidth > 0")
+        page.locator(".lp-technologies").screenshot(path="artifacts/sixth-technology-wheel.png")
+        page.emulate_media(reduced_motion="reduce")
+        page.get_by_role("button", name="04 Your next move").click()
+        expect(page.locator(".lp-pantry-preview")).to_be_visible()
+        assert page.locator(".lp-recipe").count() == 0
+        page.get_by_role("button", name="Review sample cart", exact=True).click()
+        expect(page.get_by_role("dialog")).to_be_visible()
+        page.get_by_role("button", name="Prepare sample cart", exact=True).click()
+        expect(page.get_by_text("Sample cart prepared. Nothing purchased.")).to_be_visible()
+        page.keyboard.press("Escape")
+        expect(page.get_by_role("dialog")).not_to_be_visible()
+        page.get_by_role("button", name="Plan for six guests", exact=True).click()
+        expect(page.locator(".lp-quantity-row").get_by_text("900 g", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Plan for four guests", exact=True).click()
+        expect(page.get_by_text("400 g", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Every connection has a little context").click()
+        expect(page.locator(".lp-source-excerpt")).to_be_visible()
+        page.get_by_role("button", name="dusk", exact=True).click()
+        expect(page.locator(".lp-appearance")).to_have_attribute("data-appearance", "dusk")
+        page.get_by_role("button", name="paper", exact=True).click()
+        page.get_by_text("Will Sixth buy anything for me?", exact=True).click()
+        expect(page.get_by_text("No. This preview prepares a local test cart", exact=False)).to_be_visible()
+        page.get_by_role("button", name="02 A dinner together").click()
+        expect(page.get_by_text("Maya’s birthday dinner", exact=True)).to_be_visible()
+        expect(page.locator(".lp-recipe img")).to_have_js_property("complete", True)
+        assert page.locator(".lp-recipe img").evaluate("image => image.naturalWidth > 0")
+        page.locator(".lp-story-sticky").screenshot(path="artifacts/sixth-updated-slides.png")
+        page.get_by_role("button", name="03 Room for change").click()
+        expect(page.locator(".lp-preference-update").get_by_text("Green tea", exact=True)).to_be_visible()
+        assert page.locator(".lp-recipe").count() == 0
+        page.get_by_role("button", name="01 A small detail").click()
+        expect(page.get_by_text("You · Coffee with oat milk", exact=True)).to_be_visible()
+        assert page.locator(".lp-recipe").count() == 0
         page.add_script_tag(path="node_modules/axe-core/axe.min.js")
         violations = page.evaluate("async () => (await axe.run(document, {runOnly: {type:'tag', values:['wcag2a','wcag2aa','wcag21aa']}})).violations")
-        assert violations == [], json.dumps(violations, indent=2)
+        assert violations == [], json.dumps([
+            {"id": item["id"], "nodes": [{"target": node["target"], "reason": node.get("failureSummary")} for node in item["nodes"]]}
+            for item in violations
+        ], indent=2)
         for width in [320, 390, 768, 1440]:
             page.set_viewport_size({"width": width, "height": 1000})
+            page.evaluate("window.scrollTo({top: 0, behavior: 'instant'})")
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Overflow at {width}"
+            page.screenshot(path=f"artifacts/sixth-landing-hero-{width}.png")
             page.screenshot(path=f"artifacts/sixth-welcome-{width}.png", full_page=True)
         browser.close()
 
@@ -38,6 +92,7 @@ def test_consumer_workflow_and_responsive_layout():
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
+        page.emulate_media(reduced_motion="reduce")
         page.goto(os.environ.get("SIXTH_WEB_URL", "http://127.0.0.1:5173/"))
         page.wait_for_load_state("networkidle")
         base = os.environ.get("SIXTH_WEB_URL", "http://127.0.0.1:5173/").rstrip("/")
@@ -45,7 +100,35 @@ def test_consumer_workflow_and_responsive_layout():
         assert response.status == 200
         page.reload()
         expect(page.get_by_role("heading", name="Your everyday, connected.")).to_be_visible()
+        page.add_script_tag(path="node_modules/axe-core/axe.min.js")
+
+        def check_workspace_accessibility():
+            issues = page.evaluate("async () => (await axe.run(document, {runOnly: {type:'tag', values:['wcag2a','wcag2aa','wcag21aa']}})).violations")
+            assert issues == [], json.dumps(issues, indent=2)
+
+        check_workspace_accessibility()
+        expect(page.locator("html")).to_have_attribute("data-theme", "paper")
+        page.screenshot(path="artifacts/sixth-workspace-paper.png")
+        page.get_by_role("button", name="About Sixth", exact=True).click()
+        expect(page.get_by_role("heading", name="Less on your mind. More room for life.")).to_be_visible()
+        page.get_by_role("button", name="Return to your workspace").click()
+        expect(page.get_by_role("heading", name="Your everyday, connected.")).to_be_visible()
+        page.get_by_role("button", name="Show personal context").click()
+        expect(page.get_by_role("button", name="Close personal context")).to_be_visible()
+        page.get_by_role("button", name="Close personal context").click()
         composer = page.get_by_role("textbox", name="Message Sixth")
+        navigations = []
+        requests = []
+        page.on("framenavigated", lambda frame: navigations.append(frame.url) if frame == page.main_frame else None)
+        page.on("request", lambda request: requests.append(request.url))
+        optimistic_checks = []
+
+        def delay_message_submission(route):
+            # The user bubble must exist before the POST is allowed to finish.
+            optimistic_checks.append(page.locator('.message.user p').last.inner_text())
+            route.continue_()
+
+        page.route("**/v1/conversations/*/messages", delay_message_submission)
 
         def send(text):
             composer.fill(text)
@@ -53,6 +136,21 @@ def test_consumer_workflow_and_responsive_layout():
 
         send("Maya is vegetarian")
         expect(page.get_by_text("I’ll remember that Maya is vegetarian.", exact=False)).to_be_visible()
+        expect(page.get_by_role("button", name="Stop current task")).not_to_be_visible()
+        assert optimistic_checks == ["Maya is vegetarian"]
+        assert navigations == []
+        assert not any(url.endswith("/v1/status") for url in requests)
+        assert page.locator('.message.user').count() == 1
+        page.locator('.message.user').evaluate("element => element.dataset.continuity = 'keep'")
+        assert page.locator('.message.user').evaluate("element => getComputedStyle(element).animationName") == "none"
+        page.emulate_media(reduced_motion="no-preference")
+        send("Sam likes green tea")
+        expect(page.get_by_text("I’ll remember that Sam prefers green tea.", exact=False)).to_be_visible()
+        assert page.locator('[data-continuity="keep"]').count() == 1
+        assert navigations == []
+        assert page.locator('.message.user').last.evaluate("element => getComputedStyle(element).animationName") == "workspace-enter"
+        page.emulate_media(reduced_motion="reduce")
+        page.unroute("**/v1/conversations/*/messages", delay_message_submission)
         page.get_by_role("button", name="Start a new conversation").click()
         send("Plan Maya's birthday dinner for four")
         expect(page.get_by_role("button", name="Prepare test cart")).to_be_visible()
@@ -63,6 +161,8 @@ def test_consumer_workflow_and_responsive_layout():
         expect(page.get_by_text("Cart contents verified. No purchase made.")).to_be_visible()
         page.get_by_role("button", name="Why this plan?").last.click()
         expect(page.get_by_role("heading", name="A reason for every choice.")).to_be_visible()
+        check_workspace_accessibility()
+        page.screenshot(path="artifacts/sixth-workspace-evidence.png")
         page.get_by_role("button", name="Close evidence").click()
         page.reload()
         page.wait_for_load_state("networkidle")
@@ -73,9 +173,18 @@ def test_consumer_workflow_and_responsive_layout():
         page.get_by_role("textbox", name="Updated preference").fill("vegan")
         page.get_by_role("button", name="Save correction").click()
         expect(page.get_by_text("vegan", exact=True)).to_be_visible()
+        page.add_script_tag(path="node_modules/axe-core/axe.min.js")
+        check_workspace_accessibility()
+        page.screenshot(path="artifacts/sixth-workspace-memory.png")
+        page.get_by_role("button", name="Your plans", exact=False).click()
+        expect(page.get_by_role("heading", name="Good intentions, taking shape.")).to_be_visible()
+        expect(page.locator(".plan-card")).to_have_count(1)
+        check_workspace_accessibility()
+        page.screenshot(path="artifacts/sixth-workspace-plans.png")
         page.get_by_role("button", name="Alex’s workspace").click()
         page.get_by_role("button", name="Paper", exact=True).click()
         expect(page.locator("html")).to_have_attribute("data-theme", "paper")
+        page.screenshot(path="artifacts/sixth-workspace-settings.png")
         page.add_script_tag(path="node_modules/axe-core/axe.min.js")
         violations = page.evaluate(
             "async () => (await axe.run(document, {runOnly: {type:'tag', values:['wcag2a','wcag2aa','wcag21aa']}})).violations"
@@ -83,7 +192,9 @@ def test_consumer_workflow_and_responsive_layout():
         assert violations == [], json.dumps(violations, indent=2)
         page.get_by_role("button", name="Grove", exact=True).click()
         expect(page.locator("html")).to_have_attribute("data-theme", "grove")
+        check_workspace_accessibility()
         page.get_by_role("button", name="Dusk", exact=True).click()
+        check_workspace_accessibility()
         page.get_by_role("button", name="Start a new conversation").click()
         Path("artifacts").mkdir(exist_ok=True)
         for width in [320, 768, 1024, 1440]:

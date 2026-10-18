@@ -20,7 +20,7 @@ export interface Task {
   id: string; conversation_id: string; status: string; reply?: string; action?: Action;
   plan?: Plan; evidence?: Fact[]; result?: { status: string; verified_at: string }; stale?: boolean;
 }
-export interface Message { id: string; role: 'user' | 'assistant'; text: string; task_id?: string }
+export interface Message { id: string; role: 'user' | 'assistant'; text: string; task_id?: string; client_id?: string }
 export interface Conversation { id: string; title: string; created_at: string }
 export interface ConversationDetail extends Conversation { messages: Message[]; tasks: Task[] }
 export interface Status {

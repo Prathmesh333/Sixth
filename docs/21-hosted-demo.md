@@ -1,5 +1,21 @@
 # Hosted synthetic demo
 
+Current access check (18 October 2026): hosted demo-account login is disabled (`SIXTH_DEMO_LOGIN=false`); `/v1/session/demo` returns 403 even with the configured private access code. The current landing page offers Google sign-in. See [database and demo-account verification](24-database-verification.md) for storage checks and the distinction between test-mode validation and live authenticated use.
+
+Live Google account check (18 October 2026): sign-in, a synthetic message, sourced memory, and persistence after reload passed. Independent queries confirmed the message in PostgreSQL and the sourced assertion in FalkorDB. See the [live verification details](24-database-verification.md#live-google-account-verification). The deployment checks below record the earlier frontend release checks.
+
+## Frontend redesign deployed — October 18, 2026
+
+- Production: https://sixth-one.vercel.app
+- Vercel deployment: `dpl_Hm6nzuR9kRoqBU4N6SL37LSo8MDQ`, status READY, promoted to the existing production domain.
+- Published from the current workspace through the authenticated Vercel CLI. Includes the landing narrative, four distinct scroll-driven examples, rotating technology logos, and the redesigned signed-in workspace.
+- Live browser checks passed for scroll progression, local sample-cart review, all eight SVG technology assets, the recipe WebP, and layouts at 390, 768 and 1440 pixels. No horizontal overflow, page JavaScript errors, or automated WCAG A/AA scan violations were found in the tested landing state.
+- The production `/v1/auth/config` endpoint returns 200 with a configured Google client, and the hosted Google sign-in button renders. This deployment check did not complete a Google account login or perform any authenticated production mutation.
+- `/health/ready` returned 200. Existing Vercel API/health rewrites were retained. The signed-in workflow, memory correction, context review and theme accessibility were verified against isolated local services before deployment.
+- Local renders, prompt packs and video-reference exports under `design/redesign` are excluded from deployment uploads. The public landing assets remain included.
+
+The record below describes the earlier backend verification; it does not imply those authenticated production checks were repeated for this frontend release.
+
 ## Verified deployment — October 17, 2026
 
 - Frontend: https://sixth-one.vercel.app

@@ -1,5 +1,7 @@
 # Implementation status
 
+For the latest access and storage checks, read the [18 October database verification](24-database-verification.md). For current account behavior, read the [personal React app guide](23-personal-react-app.md). The entries below record earlier implementation stages; references to demo-code forms, missing authentication, and older test counts do not describe the current interface.
+
 October 16, 2026. This is the current implementation record; earlier design documents describe the broader product target.
 
 ## October 17 hosting preparation

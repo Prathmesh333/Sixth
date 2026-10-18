@@ -1,0 +1,1145 @@
+/* The signed-in workspace shares the landing's typography, materials and motion.
+   All color roles come from design/themes.css, including the dark appearances. */
+.app-shell {
+  --workspace-line: color-mix(in srgb, var(--sixth-border) 24%, transparent);
+  --workspace-tint: color-mix(
+    in srgb,
+    var(--sixth-accent) 8%,
+    var(--sixth-surface)
+  );
+  padding: 12px;
+  gap: 12px;
+  background: var(--sixth-background);
+}
+.app-shell .sidebar {
+  width: 232px;
+  padding: 22px 10px 10px;
+  border: 0;
+  background: transparent;
+}
+.app-shell .brand {
+  padding: 0 10px;
+}
+.brand-home {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  font-size: 29px;
+  letter-spacing: -1.5px;
+  font-weight: 550;
+  min-height: 44px;
+}
+.brand-home .mark.small {
+  width: 27px;
+  height: 27px;
+}
+.app-shell .brand-period {
+  color: var(--sixth-text);
+}
+.app-shell .new-chat {
+  margin: 29px 0 26px;
+  border-radius: 30px;
+  border-color: var(--workspace-line);
+  background: var(--sixth-text);
+  color: var(--sixth-background);
+  padding: 13px 16px;
+  font-size: 12px;
+  gap: 10px;
+  transition:
+    transform 160ms,
+    box-shadow 160ms;
+}
+.app-shell .new-chat > span {
+  color: inherit;
+}
+.app-shell .new-chat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px color-mix(in srgb, var(--sixth-text) 10%, transparent);
+}
+.app-shell .primary-nav {
+  gap: 5px;
+}
+.app-shell .primary-nav button {
+  padding: 13px 14px;
+  border-radius: 11px;
+  font-size: 12px;
+  gap: 11px;
+  transition:
+    background 160ms,
+    color 160ms;
+}
+.app-shell .primary-nav button.active {
+  background: var(--workspace-tint);
+  color: var(--sixth-accent);
+}
+.app-shell .nav-count {
+  min-width: 20px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 10px;
+  background: color-mix(in srgb, var(--sixth-border) 9%, transparent);
+}
+.app-shell .recent-heading {
+  margin: 34px 14px 12px;
+  font-size: 9px;
+  letter-spacing: 1.7px;
+}
+.app-shell .recent-list button {
+  border-radius: 9px;
+  font-size: 11px;
+  min-height: 44px;
+  padding: 12px 14px;
+}
+.app-shell .recent-list button.selected {
+  background: var(--workspace-tint);
+}
+.app-shell .recent-list > p {
+  font-size: 12px;
+  padding-inline: 14px;
+  opacity: 1;
+}
+.app-shell .workspace-note {
+  padding: 18px 14px 24px;
+  border-top: 1px solid var(--workspace-line);
+  gap: 11px;
+}
+.app-shell .workspace-note .little-star {
+  font-size: 28px;
+}
+.app-shell .workspace-note p {
+  font-size: 10px;
+  line-height: 1.9;
+}
+.app-shell .profile {
+  padding: 16px 9px;
+  gap: 10px;
+  border-top-color: var(--workspace-line);
+  border-radius: 8px;
+}
+.app-shell .profile.active {
+  background: var(--workspace-tint);
+}
+.app-shell .profile strong {
+  font-size: 11px;
+}
+.app-shell .profile small {
+  font-size: 9px;
+  line-height: 1.5;
+}
+.app-shell .avatar {
+  width: 33px;
+  height: 33px;
+  background: var(--workspace-tint);
+  color: var(--sixth-accent);
+}
+.app-shell .source-link {
+  font-size: 9px;
+  min-height: 32px;
+}
+.app-shell .main-shell {
+  border: 1px solid var(--workspace-line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--sixth-surface);
+}
+.app-shell .topbar {
+  min-height: 66px;
+  padding: 0 30px;
+  border-bottom-color: var(--workspace-line);
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 40%,
+    var(--sixth-surface)
+  );
+}
+.app-shell .breadcrumb {
+  font-size: 11px;
+}
+.app-shell .breadcrumb > strong {
+  font-weight: 500;
+}
+.app-shell .connection-label {
+  padding: 6px 10px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 20px;
+  font-size: 9px;
+}
+.app-shell .connection-dot {
+  width: 5px;
+  height: 5px;
+}
+.app-shell .icon-button {
+  border-radius: 50%;
+  min-width: 44px;
+  min-height: 44px;
+}
+.app-shell .chat-scroll {
+  padding: 30px 38px;
+}
+.app-shell .welcome {
+  max-width: 820px;
+  text-align: center;
+  padding: 30px 8px 10px;
+}
+.app-shell .welcome-mark {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 94px;
+  height: 94px;
+  margin: 0 auto 28px;
+}
+.app-shell .welcome-mark > .mark {
+  width: 61px;
+  height: 61px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(
+    0 6px 8px color-mix(in srgb, var(--sixth-accent) 17%, transparent)
+  );
+}
+.workspace-orbit {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--sixth-accent) 16%, transparent);
+  border-radius: 50%;
+}
+.workspace-orbit::before,
+.workspace-orbit::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--sixth-accent) 8%, transparent);
+}
+.workspace-orbit::after {
+  inset: -25px;
+  border-color: color-mix(in srgb, var(--sixth-accent) 4%, transparent);
+}
+.app-shell .eyebrow {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.9px;
+}
+.app-shell h1 {
+  font-size: clamp(38px, 4.2vw, 62px);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 1.08;
+}
+.app-shell h1 em {
+  font: inherit;
+  font-style: normal;
+  letter-spacing: inherit;
+  color: var(--sixth-accent);
+}
+.app-shell .welcome-description {
+  margin: 20px auto 30px;
+  font-size: 13px;
+  line-height: 1.8;
+  max-width: 440px;
+}
+.app-shell .suggestions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  border: 0;
+  max-width: 700px;
+  margin: auto;
+}
+.app-shell .suggestions button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  padding: 18px;
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 75%,
+    var(--sixth-surface)
+  );
+  border: 1px solid var(--workspace-line);
+  border-radius: 13px;
+  transition:
+    transform 160ms,
+    border-color 160ms;
+}
+.app-shell .suggestions button:hover {
+  transform: translateY(-3px);
+  border-color: var(--sixth-accent);
+}
+.app-shell .suggestions button > svg {
+  color: var(--sixth-accent);
+}
+.app-shell .suggestions button > span {
+  font-size: 11px;
+  font-weight: 500;
+}
+.app-shell .suggestions button small {
+  font-size: 10px;
+  line-height: 1.7;
+  font-weight: 400;
+  margin-top: 7px;
+}
+.app-shell .suggestions button .suggestion-arrow {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 14px;
+}
+.welcome-context {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-top: 25px;
+  font-size: 10px;
+  color: var(--sixth-muted);
+}
+.welcome-context > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.app-shell .composer-wrap {
+  max-width: 920px;
+  padding: 0 38px 20px;
+}
+.app-shell .composer {
+  border-radius: 20px;
+  border-color: var(--workspace-line);
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 55%,
+    var(--sixth-surface)
+  );
+  padding: 18px 20px 13px;
+  box-shadow: 0 5px 20px color-mix(in srgb, var(--sixth-text) 3%, transparent);
+  transition:
+    border-color 160ms,
+    box-shadow 160ms;
+}
+.app-shell .composer:focus-within {
+  border-color: var(--sixth-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sixth-accent) 10%, transparent);
+}
+.app-shell .composer textarea {
+  font-size: 14px;
+  min-height: 48px;
+}
+.app-shell .composer-context,
+.app-shell .enter-hint {
+  font-size: 10px;
+}
+.app-shell .send-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+.app-shell .composer-caption {
+  font-size: 10px;
+  margin-top: 12px;
+  line-height: 1.7;
+}
+.app-shell .transcript {
+  max-width: 790px;
+  margin: 10px auto 25px;
+}
+.app-shell .message {
+  margin-bottom: 34px;
+  animation: workspace-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.app-shell .chat-scroll { overscroll-behavior: contain; overflow-anchor: none; }
+.app-shell .thinking-message { align-items: center; }
+.app-shell .thinking-bubble { display: flex; gap: 5px; padding: 15px 18px; border-radius: 15px; background: var(--workspace-tint); }
+.app-shell .thinking-bubble span { width: 5px; height: 5px; border-radius: 50%; background: var(--sixth-muted); animation: thought-pulse 1200ms ease-in-out infinite; }
+.app-shell .thinking-bubble span:nth-child(2) { animation-delay: 150ms; }
+.app-shell .thinking-bubble span:nth-child(3) { animation-delay: 300ms; }
+.app-shell .action-card { animation: workspace-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.app-shell .send-button { transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease; touch-action: manipulation; }
+.app-shell .send-button:active { transform: scale(.94); transition-duration: 0s; }
+@keyframes thought-pulse { 0%, 70%, 100% { opacity: .35; transform: translateY(0); } 35% { opacity: 1; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .message, .app-shell .action-card, .app-shell .thinking-bubble span { animation: none; }
+  .app-shell .send-button { transition: none; }
+}
+.app-shell .message-author {
+  font-size: 10px;
+  letter-spacing: 0.3px;
+}
+.app-shell .message p {
+  font-size: 14px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+.app-shell .message.user {
+  padding-left: 65px;
+  text-align: right;
+}
+.app-shell .message.user .message-author {
+  display: block;
+}
+.app-shell .message.user p {
+  text-align: left;
+  background: var(--workspace-tint);
+  border-radius: 15px 15px 3px 15px;
+  padding: 13px 18px;
+}
+.app-shell .message > .mark {
+  width: 25px;
+  height: 25px;
+}
+.app-shell .action-card {
+  max-width: 610px;
+  border-radius: 16px;
+  border-color: var(--workspace-line);
+  padding: 25px;
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 45%,
+    var(--sixth-surface)
+  );
+}
+.app-shell .action-card h3 {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.8px;
+}
+.app-shell .action-card > p {
+  font-size: 12px;
+}
+.app-shell .mode-tag {
+  border-radius: 20px;
+  padding: 5px 9px;
+  font-size: 10px;
+}
+.app-shell .recipe-meta {
+  font-size: 11px;
+  gap: 15px;
+}
+.app-shell .ingredient-list {
+  border-color: var(--workspace-line);
+  margin-top: 24px;
+}
+.app-shell .ingredient-head {
+  font-size: 10px;
+}
+.app-shell .ingredient {
+  border-color: var(--workspace-line);
+  font-size: 12px;
+  padding-block: 12px;
+}
+.app-shell .ingredient small {
+  font-size: 10px;
+  line-height: 1.6;
+}
+.app-shell .cart-total {
+  border-color: var(--workspace-line);
+  font-size: 13px;
+}
+.app-shell .evidence-link {
+  min-height: 44px;
+  font-size: 11px;
+}
+.app-shell .card-caption {
+  font-size: 10px;
+  line-height: 1.7;
+}
+.app-shell .button {
+  min-height: 44px;
+  font-size: 12px;
+  border-radius: 25px;
+  padding: 10px 18px;
+  transition:
+    background 160ms,
+    transform 160ms;
+}
+.app-shell .button.primary:hover {
+  filter: brightness(0.96);
+}
+.app-shell .button.secondary {
+  border-color: var(--workspace-line);
+}
+.app-shell .action-outcome {
+  font-size: 11px;
+  line-height: 1.7;
+}
+.app-shell .context-shell {
+  display: none;
+}
+.app-shell .context-shell.expanded {
+  display: block;
+  width: 300px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 20px;
+  background: var(--sixth-surface);
+  overflow: hidden;
+}
+.app-shell .context-panel {
+  padding: 20px 24px 24px;
+  animation: workspace-panel 180ms ease both;
+}
+.app-shell .context-heading {
+  font-size: 9px;
+  letter-spacing: 1.4px;
+}
+.app-shell .context-panel h2 {
+  font-size: 25px;
+  line-height: 1.18;
+  font-weight: 500;
+  letter-spacing: -1px;
+  margin-top: 25px;
+}
+.app-shell .context-intro {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.app-shell .context-divider,
+.app-shell .context-fact {
+  border-color: var(--workspace-line);
+}
+.app-shell .context-section-title {
+  font-size: 11px;
+}
+.app-shell .context-fact {
+  margin-top: 14px;
+  padding: 17px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 70%,
+    var(--sixth-surface)
+  );
+}
+.app-shell .fact-person strong {
+  font-size: 12px;
+}
+.app-shell .person-dot {
+  width: 31px;
+  height: 31px;
+  font-size: 11px;
+  background: var(--workspace-tint);
+}
+.app-shell .context-fact > small {
+  font-size: 10px;
+  line-height: 1.6;
+}
+.app-shell .context-fact blockquote {
+  font-size: 11px;
+}
+.app-shell .context-empty p {
+  font-size: 12px;
+}
+.app-shell .context-bottom {
+  padding-top: 35px;
+}
+.app-shell .context-bottom strong,
+.app-shell .context-bottom p {
+  font-size: 10px;
+}
+.app-shell .evidence-path {
+  font-size: 10px;
+  border: 1px solid var(--workspace-line);
+  padding: 13px;
+  border-radius: 10px;
+}
+.app-shell .page-view {
+  max-width: 1150px;
+  padding: 55px clamp(25px, 4vw, 65px) 75px;
+  animation: workspace-enter 180ms ease both;
+}
+.app-shell .page-view h1 {
+  font-size: clamp(36px, 4vw, 54px);
+}
+.app-shell .page-description {
+  font-size: 13px;
+  max-width: 570px;
+  line-height: 1.9;
+  margin: 22px 0 32px;
+}
+.app-shell .search-field {
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 70%,
+    var(--sixth-surface)
+  );
+  border: 1px solid var(--workspace-line);
+  padding: 9px 16px;
+  border-radius: 30px;
+}
+.app-shell .search-field input {
+  font-size: 12px;
+}
+.app-shell .search-field span {
+  font-size: 10px;
+}
+.app-shell .memory-list {
+  gap: 18px;
+}
+.app-shell .memory-card {
+  padding: 23px;
+  border-radius: 15px;
+  border-color: var(--workspace-line);
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 55%,
+    var(--sixth-surface)
+  );
+}
+.app-shell .memory-card-heading {
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.app-shell .memory-card-heading > strong {
+  font-size: 13px;
+}
+.app-shell .memory-kind {
+  border: 1px solid var(--workspace-line);
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 9px;
+}
+.app-shell .memory-controls .icon-button {
+  min-width: 36px;
+  min-height: 44px;
+}
+.app-shell .memory-value {
+  font-size: 28px;
+  letter-spacing: -1px;
+  margin: 22px 0;
+}
+.app-shell .memory-card blockquote {
+  font-size: 12px;
+  border-top-color: var(--workspace-line);
+}
+.app-shell .memory-card blockquote span {
+  font-size: 9px;
+}
+.app-shell .memory-footer {
+  font-size: 10px;
+  gap: 12px;
+  line-height: 1.7;
+  margin-top: 14px;
+}
+.app-shell .memory-edit input,
+.app-shell .friend-form input {
+  border: 1px solid var(--workspace-line);
+  border-radius: 10px;
+  padding: 13px;
+  background: var(--sixth-surface);
+  color: var(--sixth-text);
+  min-width: 0;
+  width: 100%;
+  font-size: 14px;
+}
+.app-shell .memory-edit label {
+  display: block;
+  font-size: 12px;
+  margin: 18px 0 8px;
+}
+.app-shell .memory-edit > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.app-shell .forget-confirm {
+  background: var(--workspace-tint);
+  padding: 16px;
+  border-radius: 10px;
+}
+.app-shell .forget-confirm p {
+  font-size: 12px;
+}
+.app-shell .empty-state {
+  border: 1px dashed var(--workspace-line);
+  border-radius: 16px;
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 50%,
+    var(--sixth-surface)
+  );
+  padding: 55px 25px;
+}
+.app-shell .empty-state h2 {
+  font-size: 25px;
+  font-weight: 500;
+}
+.app-shell .empty-state p {
+  font-size: 13px;
+}
+.app-shell .plan-card {
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 55%,
+    var(--sixth-surface)
+  );
+  border-radius: 15px;
+  border-color: var(--workspace-line);
+  padding: 25px;
+}
+.app-shell .plan-date {
+  background: var(--workspace-tint);
+  border: 0;
+  border-radius: 11px;
+  min-width: 70px;
+  padding: 14px 10px;
+}
+.app-shell .plan-date strong {
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--sixth-accent);
+}
+.app-shell .plan-date span {
+  font-size: 9px;
+}
+.app-shell .plan-summary h2 {
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.6px;
+}
+.app-shell .plan-summary p {
+  font-size: 12px;
+}
+.app-shell .plan-kicker,
+.app-shell .status-pill {
+  font-size: 10px;
+}
+.app-shell .status-pill {
+  padding: 5px 9px;
+  background: var(--workspace-tint);
+  border-radius: 20px;
+}
+.app-shell .quiet-note {
+  font-size: 12px;
+}
+.app-shell .settings-section {
+  border-color: var(--workspace-line);
+  padding-top: 28px;
+  margin-top: 38px;
+}
+.app-shell .settings-section h2 {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+.app-shell .settings-section > p {
+  font-size: 12px;
+}
+.app-shell .theme-options {
+  gap: 14px;
+  max-width: 600px;
+}
+.app-shell .theme-option {
+  border-radius: 12px;
+  padding: 8px;
+}
+.app-shell .theme-option.selected {
+  background: var(--workspace-tint);
+}
+.app-shell .theme-preview {
+  height: 90px;
+  border-radius: 8px;
+  background: #232229;
+  border-color: #8b7c9b;
+}
+.app-shell .paper .theme-preview {
+  background: #f6f5f1;
+}
+.app-shell .grove .theme-preview {
+  background: #21312a;
+}
+.app-shell .theme-option > span:last-child {
+  font-size: 12px;
+}
+.app-shell .connections {
+  border: 1px solid var(--workspace-line);
+  border-radius: 14px;
+  padding: 0 20px;
+}
+.app-shell .connection {
+  border-color: var(--workspace-line);
+  padding-block: 20px;
+}
+.app-shell .connection:last-child {
+  border-bottom: 0;
+}
+.app-shell .connection strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.app-shell .connection p {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.app-shell .setup-details {
+  border: 1px solid var(--workspace-line);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 12px;
+}
+.app-shell .setup-details summary {
+  min-height: 30px;
+  cursor: pointer;
+}
+.app-shell .setup-details pre {
+  overflow-x: auto;
+  font-size: 11px;
+  background: var(--sixth-background);
+  border-radius: 8px;
+  padding: 12px;
+}
+.app-shell .friend-form {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 15px;
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 55%,
+    var(--sixth-surface)
+  );
+  max-width: 550px;
+}
+.app-shell .friend-form label {
+  font-size: 12px;
+}
+.app-shell .friend-form button {
+  justify-self: start;
+}
+.app-shell .friend-card {
+  border: 1px solid var(--workspace-line);
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 14px;
+  background: color-mix(
+    in srgb,
+    var(--sixth-background) 55%,
+    var(--sixth-surface)
+  );
+}
+.app-shell .friend-card strong {
+  font-weight: 500;
+}
+.app-shell .friend-card p,
+.app-shell .friend-card small {
+  font-size: 12px;
+  color: var(--sixth-muted);
+}
+.app-shell .error-banner {
+  font-size: 12px;
+  line-height: 1.8;
+}
+@keyframes workspace-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes workspace-panel {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (max-width: 1200px) {
+  .app-shell .context-shell.expanded {
+    position: fixed;
+    z-index: 25;
+    top: 88px;
+    right: 24px;
+    bottom: 24px;
+    width: 320px;
+    box-shadow: -15px 15px 55px
+      color-mix(in srgb, var(--sixth-text) 12%, transparent);
+  }
+  .app-shell .context-panel:not(.evidence-open) .context-heading::after {
+    display: none;
+  }
+}
+@media (max-width: 1000px) {
+  .app-shell {
+    gap: 6px;
+    padding: 8px;
+  }
+  .app-shell .sidebar {
+    width: 205px;
+    padding-inline: 6px;
+  }
+  .app-shell .chat-scroll {
+    padding: 25px;
+  }
+  .app-shell .composer-wrap {
+    padding-inline: 25px;
+  }
+  .app-shell .welcome {
+    padding-inline: 0;
+  }
+  .app-shell .suggestions button {
+    padding: 14px;
+  }
+  .app-shell .profile small {
+    font-size: 8px;
+  }
+  .app-shell .welcome h1 {
+    font-size: 48px;
+  }
+  .app-shell .memory-list {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-height: 850px) and (min-width: 769px) {
+  .app-shell .welcome-mark {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+  }
+  .app-shell .welcome-mark > .mark {
+    width: 43px;
+    height: 43px;
+  }
+  .app-shell .welcome {
+    padding-top: 10px;
+  }
+  .app-shell .welcome-description {
+    margin-block: 15px 22px;
+  }
+  .app-shell .welcome-context {
+    margin-top: 17px;
+  }
+  .app-shell .suggestions button {
+    padding: 14px;
+    gap: 10px;
+  }
+}
+@media (max-width: 768px) {
+  .app-shell {
+    padding: 0;
+    gap: 0;
+  }
+  .app-shell .main-shell {
+    border: 0;
+    border-radius: 0;
+  }
+  .app-shell .sidebar.open {
+    width: min(290px, 90vw);
+    padding: 24px 15px 12px;
+    background: var(--sixth-background);
+    box-shadow: 20px 0 60px #0002;
+  }
+  .app-shell .topbar {
+    padding-inline: 14px;
+    min-height: 64px;
+  }
+  .app-shell .breadcrumb {
+    font-size: 10px;
+  }
+  .app-shell .chat-scroll {
+    padding: 24px 20px;
+  }
+  .app-shell .welcome {
+    max-width: 600px;
+    padding: 15px 0;
+  }
+  .app-shell .welcome h1 {
+    font-size: 48px;
+  }
+  .app-shell .welcome-mark {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 25px;
+  }
+  .app-shell .welcome-mark > .mark {
+    width: 46px;
+    height: 46px;
+  }
+  .app-shell .suggestions {
+    max-width: 560px;
+  }
+  .app-shell .composer-wrap {
+    padding: 0 20px 15px;
+  }
+  .app-shell .composer {
+    padding: 15px 16px 12px;
+    border-radius: 18px;
+  }
+  .app-shell .composer-caption {
+    font-size: 9px;
+  }
+  .app-shell .context-shell.expanded {
+    top: 74px;
+    right: 10px;
+    bottom: 10px;
+    width: min(340px, calc(100vw - 20px));
+    border-radius: 16px;
+  }
+  .app-shell .context-panel {
+    padding: 18px 22px;
+  }
+  .app-shell .page-view {
+    padding: 35px 24px 50px;
+  }
+  .app-shell .page-view h1 {
+    font-size: 39px;
+  }
+  .app-shell .memory-card {
+    padding: 20px;
+  }
+  .app-shell .plan-card {
+    gap: 16px;
+    padding: 20px;
+  }
+  .app-shell .plan-summary {
+    min-width: 0;
+  }
+  .app-shell .plan-summary h2 {
+    font-size: 20px;
+  }
+  .app-shell .plan-kicker > span {
+    display: block;
+    margin: 5px 0 0;
+  }
+  .app-shell .connections {
+    padding-inline: 15px;
+  }
+  .app-shell .theme-preview {
+    padding: 13px;
+  }
+}
+@media (max-width: 560px) {
+  .app-shell .suggestions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .app-shell .suggestions button {
+    display: flex;
+    flex-direction: row;
+    gap: 14px;
+    align-items: center;
+    padding: 13px 15px;
+  }
+  .app-shell .suggestions button > svg {
+    flex-shrink: 0;
+  }
+  .app-shell .suggestions button > span {
+    font-size: 11px;
+    padding-right: 18px;
+  }
+  .app-shell .suggestions button .suggestion-arrow {
+    right: 0;
+    padding-right: 14px;
+    top: 18px;
+  }
+  .app-shell .suggestions button small {
+    margin-top: 4px;
+    font-size: 10px;
+  }
+  .app-shell .welcome-context {
+    gap: 10px;
+    font-size: 9px;
+    margin-top: 18px;
+  }
+  .app-shell .welcome h1 {
+    font-size: 43px;
+  }
+  .app-shell .welcome-description {
+    font-size: 12px;
+    margin: 16px auto 22px;
+  }
+  .app-shell .welcome-mark {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 22px;
+  }
+  .app-shell .welcome-mark > .mark {
+    width: 37px;
+    height: 37px;
+  }
+  .app-shell .chat-scroll {
+    padding: 25px 18px;
+  }
+  .app-shell .is-welcome .chat-scroll {
+    align-items: flex-start;
+  }
+  .app-shell .composer-wrap {
+    padding-inline: 14px;
+  }
+  .app-shell .composer-context {
+    font-size: 9px;
+  }
+  .app-shell .enter-hint {
+    display: none;
+  }
+  .app-shell .message.user {
+    padding-left: 28px;
+  }
+  .app-shell .message p {
+    font-size: 13px;
+  }
+  .app-shell .action-card {
+    padding: 18px;
+  }
+  .app-shell .action-card h3 {
+    font-size: 22px;
+  }
+  .app-shell .action-footer {
+    flex-wrap: wrap;
+  }
+  .app-shell .page-view {
+    padding-inline: 20px;
+  }
+  .app-shell .page-title-row {
+    gap: 15px;
+  }
+  .app-shell .page-view h1 {
+    font-size: 37px;
+  }
+  .app-shell .plan-card-end {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .app-shell .plan-summary {
+    flex-basis: calc(100% - 90px);
+  }
+  .app-shell .friend-form {
+    padding: 20px;
+  }
+  .app-shell .friend-card {
+    padding: 18px;
+  }
+  .app-shell .friend-actions {
+    flex-wrap: wrap;
+  }
+  .app-shell .search-field {
+    padding-inline: 12px;
+  }
+  .app-shell .search-field span {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .app-shell *::before,
+  .app-shell *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .app-shell .suggestions button:hover,
+  .app-shell .new-chat:hover {
+    transform: none;
+  }
+}

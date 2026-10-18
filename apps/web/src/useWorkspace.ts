@@ -16,10 +16,32 @@ export function useWorkspace() {
   const stream = useRef<EventSource | null>(null);
   const generation = useRef(0);
   const demoCode = useRef('');
+  const statusCache = useRef<Status | null>(null);
+  const sending = useRef(false);
+  const activeTask = useRef<string | null>(null);
+  const poll = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function closeStream() {
+    stream.current?.close();
+    if (poll.current) clearTimeout(poll.current);
+    poll.current = null;
+  }
+
+  const refreshConversation = useCallback(async (id: string, version: number) => {
+    const detail = await api<ConversationDetail>(`/v1/conversations/${id}`);
+    if (version !== generation.current) return null;
+    setConversation(previous => previous?.id === id ? {
+      ...detail,
+      messages: detail.messages.map(message => ({ ...message,
+        client_id: previous.messages.find(old => old.id === message.id)?.client_id,
+      })),
+    } : previous);
+    return detail;
+  }, []);
 
   const load = useCallback(async (conversationId?: string) => {
     const version = generation.current;
-    const nextStatus = await api<Status>('/v1/status');
+    const nextStatus = statusCache.current || await api<Status>('/v1/status');
     const [nextConversations, nextFacts, nextPlans, nextConversation] = await Promise.all([
       api<Conversation[]>('/v1/conversations'),
       nextStatus.memory.connected ? api<{ items: Fact[] }>('/v1/memory') : Promise.resolve({ items: [] }),
@@ -27,6 +49,7 @@ export function useWorkspace() {
       conversationId ? api<ConversationDetail>(`/v1/conversations/${conversationId}`) : Promise.resolve(null),
     ]);
     if (version !== generation.current) return;
+    statusCache.current = nextStatus;
     setStatus(nextStatus); setConversations(nextConversations); setFacts(nextFacts.items); setPlans(nextPlans);
     if (!nextStatus.memory.connected) setError(nextStatus.memory.detail);
     if (nextConversation) setConversation(nextConversation);
@@ -44,7 +67,7 @@ export function useWorkspace() {
       } finally { if (!cancelled) setStarting(false); }
     }
     void start();
-    return () => { cancelled = true; stream.current?.close(); };
+    return () => { cancelled = true; stream.current?.close(); if (poll.current) clearTimeout(poll.current); };
   }, [load]);
 
   const report = (err: unknown) => setError(err instanceof Error ? err.message : 'Something went wrong. Please retry.');
@@ -77,47 +100,117 @@ export function useWorkspace() {
     setBusy(true); setError('');
     try {
       await api('/v1/session/logout', 'POST');
-      stream.current?.close(); generation.current++; setCsrf(''); demoCode.current = '';
+      closeStream(); generation.current++; setCsrf(''); demoCode.current = ''; statusCache.current = null;
+      sending.current = false; activeTask.current = null;
       setSession(null); setStatus(null); setConversation(null); setConversations([]); setFacts([]); setPlans([]); setProgress('');
     } catch (err) { report(err); } finally { setBusy(false); }
   }
 
   function watch(taskId: string, conversationId: string) {
-    stream.current?.close();
+    closeStream();
+    activeTask.current = taskId;
     const version = generation.current;
+    let finishing = false;
+    async function finish() {
+      if (finishing || version !== generation.current) return;
+      finishing = true;
+      closeStream();
+      try {
+        const detail = await refreshConversation(conversationId, version);
+        if (version !== generation.current || !detail) return;
+        const task = detail.tasks.find(task => task.id === taskId);
+        if (task?.evidence?.length || task?.plan) {
+          const [memory, nextPlans] = await Promise.all([
+            api<{ items: Fact[] }>('/v1/memory'), api<Plan[]>('/v1/plans'),
+          ]);
+          if (version === generation.current) { setFacts(memory.items); setPlans(nextPlans); }
+        }
+      } catch (err) { if (version === generation.current) report(err); }
+      finally {
+        if (version === generation.current) {
+          activeTask.current = null; sending.current = false; setBusy(false); setProgress('');
+        }
+      }
+    }
+    async function checkTask() {
+      if (version !== generation.current || finishing) return;
+      if (poll.current) clearTimeout(poll.current);
+      poll.current = null;
+      try {
+        const task = await api<Task>(`/v1/tasks/${taskId}`);
+        if (version !== generation.current || finishing) return;
+        if (['awaiting_input', 'completed', 'failed', 'cancelled'].includes(task.status)) {
+          await finish(); return;
+        }
+        setProgress('Still working on your reply…');
+      } catch (err) {
+        if (version !== generation.current) return;
+        if (err instanceof ApiError && [401, 404].includes(err.status)) {
+          report(err); closeStream(); sending.current = false; setBusy(false); return;
+        }
+        setProgress('Reconnecting to your reply…');
+      }
+      if (version === generation.current && !finishing) poll.current = setTimeout(() => void checkTask(), 3000);
+    }
     const events = new EventSource(`/v1/tasks/${taskId}/events`);
     stream.current = events;
     events.onmessage = (message: MessageEvent<string>) => {
       const event = JSON.parse(message.data) as TaskEvent;
       if (generation.current !== version) { events.close(); return; }
       const labels: Record<string, string> = {
-        'task.started': 'Understanding your requestâ€¦', 'context.retrieved': 'Connecting the relevant contextâ€¦',
-        'plan.updated': 'Putting your plan togetherâ€¦', 'tool.started': 'Preparing your test cartâ€¦',
-        'memory.updated': 'Saving what mattersâ€¦',
+        'task.started': 'Thinking about your request…', 'context.retrieved': 'Connecting the relevant context…',
+        'plan.updated': 'Putting your plan together…', 'tool.started': 'Preparing your test cart…',
+        'memory.updated': 'Saving what matters…',
       };
-      setProgress(labels[event.type] || '');
+      if (labels[event.type]) setProgress(labels[event.type]);
       if (['input.required', 'task.completed', 'task.failed', 'task.cancelled'].includes(event.type)) {
-        events.close(); setBusy(false); setProgress('');
-        void load(conversationId).catch(report);
+        // Reconnected streams replay earlier review events. Check current state
+        // before settling an action that may already be running again.
+        void checkTask();
       }
     };
     events.onerror = () => {
-      events.close(); setBusy(false); setProgress('');
-      void load(conversationId).catch(report);
+      events.close();
+      if (poll.current) clearTimeout(poll.current);
+      poll.current = null;
+      if (!finishing) void checkTask();
     };
+    poll.current = setTimeout(() => { poll.current = null; void checkTask(); }, 12000);
   }
 
   async function send(text: string) {
-    if (busy || !text.trim()) return;
+    if (sending.current || busy || !text.trim()) return;
+    sending.current = true;
     const version = generation.current;
-    setError(''); setBusy(true); setProgress('Understanding your requestâ€¦');
+    const clientId = crypto.randomUUID();
+    const optimistic = { id: clientId, client_id: clientId, role: 'user' as const, text };
+    const previous = conversation;
+    setConversation(current => current ? { ...current, messages: [...current.messages, optimistic] } : {
+      id: `pending-${clientId}`, title: text.slice(0, 48), created_at: new Date().toISOString(), messages: [optimistic], tasks: [],
+    });
+    setError(''); setBusy(true); setProgress('Thinking about your request…');
     try {
-      let identifier = conversation?.id;
-      if (!identifier) identifier = (await api<Conversation>('/v1/conversations', 'POST')).id;
-      const accepted = await api<{ task_id: string }>(`/v1/conversations/${identifier}/messages`, 'POST', { text, timezone: 'Asia/Calcutta' });
+      let identifier = previous?.id;
+      if (!identifier) {
+        const created = await api<Conversation>('/v1/conversations', 'POST');
+        if (version !== generation.current) return;
+        identifier = created.id;
+        setConversation(current => current ? { ...current, ...created, title: text.slice(0, 48) } : current);
+        setConversations(current => [...current, { ...created, title: text.slice(0, 48) }]);
+      }
+      const accepted = await api<{ task_id: string; message_id: string }>(`/v1/conversations/${identifier}/messages`, 'POST', { text, timezone: 'Asia/Calcutta' });
       if (version !== generation.current) return;
-      await load(identifier); watch(accepted.task_id, identifier);
-    } catch (err) { report(err); setBusy(false); setProgress(''); }
+      setConversation(current => current ? { ...current,
+        messages: current.messages.map(message => message.client_id === clientId ? { ...message, id: accepted.message_id } : message),
+      } : current);
+      watch(accepted.task_id, identifier);
+      return true;
+    } catch (err) {
+      if (version !== generation.current) return;
+      report(err); sending.current = false; setBusy(false); setProgress('');
+      setConversation(previous);
+      return false;
+    }
   }
 
   async function decide(task: Task, decision: 'approve' | 'reject') {
@@ -131,20 +224,24 @@ export function useWorkspace() {
   }
 
   async function stop() {
-    const current = conversation?.tasks.findLast(task => ['queued', 'running', 'awaiting_input'].includes(task.status));
-    if (!current) return;
-    try { await api(`/v1/tasks/${current.id}/cancel`, 'POST'); await load(conversation?.id); }
+    const id = activeTask.current || conversation?.tasks.findLast(task => ['queued', 'running', 'awaiting_input'].includes(task.status))?.id;
+    if (!id) return;
+    try { await api(`/v1/tasks/${id}/cancel`, 'POST'); if (conversation) await refreshConversation(conversation.id, generation.current); }
     catch (err) { report(err); }
-    stream.current?.close(); setBusy(false); setProgress('');
+    closeStream(); activeTask.current = null; sending.current = false; setBusy(false); setProgress('');
   }
 
   function newConversation() {
-    stream.current?.close(); generation.current++; setConversation(null); setBusy(false); setProgress(''); setError('');
+    closeStream(); activeTask.current = null; sending.current = false; generation.current++; setConversation(null); setBusy(false); setProgress(''); setError('');
   }
 
   async function selectConversation(id: string) {
-    stream.current?.close(); generation.current++; setBusy(false); setProgress(''); setError('');
-    try { await load(id); } catch (err) { report(err); }
+    closeStream(); activeTask.current = null; sending.current = false; generation.current++; setBusy(false); setProgress(''); setError('');
+    const version = generation.current;
+    try {
+      const detail = await api<ConversationDetail>(`/v1/conversations/${id}`);
+      if (version === generation.current) setConversation(detail);
+    } catch (err) { if (version === generation.current) report(err); }
   }
 
   async function forget(fact: Fact) {

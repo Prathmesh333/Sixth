@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { api } from '../api';
+import { api, ApiError } from '../api';
 
 interface GoogleIdentity {
   initialize(options: { client_id: string; nonce: string; callback: (response: { credential: string }) => void; auto_select: boolean }): void;
@@ -56,7 +56,12 @@ export function GoogleSignIn({ onCredential, busy }: { onCredential: (credential
         }
         setState('ready');
       } catch (err) {
-        if (!cancelled) { setState('error'); setError(err instanceof Error ? err.message : 'Google sign-in is unavailable.'); }
+        if (!cancelled) {
+          setState('error');
+          setError(err instanceof ApiError && err.status === 404
+            ? 'Sign-in is temporarily unavailable. Please refresh and try again.'
+            : err instanceof Error ? err.message : 'Google sign-in is unavailable.');
+        }
       }
     }
     void setup();
