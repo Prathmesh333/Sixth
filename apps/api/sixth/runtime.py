@@ -13,7 +13,7 @@ from psycopg_pool import ConnectionPool
 from .connectors import build_menu, calendar, execute_cart, fingerprint
 from .memory import Memory
 from .models import FactInput, now, uid
-from .planner import Planner
+from .planner import ModelError, Planner
 from .storage import Store
 
 
@@ -66,12 +66,12 @@ class Runtime:
                     Command(resume=decision) if decision else {"owner": owner, "task_id": task_id},
                     self.config(owner, task_id),
                 )
-            except Exception:
+            except Exception as exc:
                 task = self.store.get(owner, "task", task_id)
                 if task and task["status"] != "cancelled":
                     task.update(
                         status="failed",
-                        reply="I couldn’t finish this request. Your earlier work is saved. Check the connection status and try again.",
+                        reply=str(exc) if isinstance(exc, ModelError) else "I couldn’t finish this request. Your earlier work is saved. Check the connection status and try again.",
                         updated_at=now(),
                     )
                     self.store.put(owner, "task", task)
@@ -101,7 +101,15 @@ class Runtime:
         task.update(status="running", updated_at=now())
         self.store.put(owner, "task", task)
         self.store.event(owner, task_id, "task.started", {"planner": self.planner.mode})
-        intent = self.planner.parse(task["text"])
+        memories = self.memory.current(owner) if self.planner.mode == "model" else []
+        history = []
+        if self.planner.mode == "model":
+            for message in self.store.list(owner, "message"):
+                if message["id"] == task["source_id"]:
+                    break
+                if message["conversation_id"] == task["conversation_id"]:
+                    history.append(message)
+        intent = self.planner.parse(task["text"], history=history, memories=memories)
         task["intent"] = intent.model_dump()
         task["evidence"] = []
         if intent.kind == "remember":

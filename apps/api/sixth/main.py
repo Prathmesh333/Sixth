@@ -225,10 +225,11 @@ def create_app(settings: Settings | None = None):
             owned(owner, "source", source_id)
 
         def submit():
-            task_id = submit_message(store, owner, conversation_id, body.text)
+            source_id = uid()
+            task_id = submit_message(store, owner, conversation_id, body.text, source_id=source_id)
             if conv["title"] == "New conversation":
                 store.put(owner, "conversation", {**conv, "title": body.text[:48]})
-            return {"task_id": task_id, "events_url": f"/v1/tasks/{task_id}/events"}
+            return {"task_id": task_id, "message_id": source_id, "events_url": f"/v1/tasks/{task_id}/events"}
 
         result = request_key(owner, "message:" + conversation_id, idempotency_key, body.model_dump(), submit)
         executor.submit(runtime.run, owner, result["task_id"])
