@@ -23,6 +23,7 @@ from .models import CorrectionInput, DecisionInput, DemoLogin, FactInput, Messag
 from .planner import Planner
 from .postgres import PostgresStore
 from .runtime import Runtime
+from .scheduling import SCHEDULING, Scheduling
 from .storage import Store
 from .tasks import submit_message
 from .whatsapp import SYSTEM, WhatsApp
@@ -40,6 +41,8 @@ def create_app(settings: Settings | None = None):
     memory = Memory(store, settings)
     planner = Planner(settings)
     runtime = Runtime(store, memory, planner)
+    scheduling = Scheduling(store, memory)
+    runtime.scheduling = scheduling
     whatsapp = WhatsApp(store, runtime, settings)
     accounts = Accounts(store, settings)
     executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="sixth")
@@ -48,7 +51,7 @@ def create_app(settings: Settings | None = None):
     @asynccontextmanager
     async def lifespan(app):
         for owner in store.owners():
-            if owner in {SYSTEM, ACCOUNTS}:
+            if owner in {SYSTEM, ACCOUNTS, SCHEDULING}:
                 continue
             for task in store.list(owner, "task"):
                 if task["status"] in {"queued", "running"}:
@@ -187,7 +190,7 @@ def create_app(settings: Settings | None = None):
         return {
             "memory": memory.health(),
             "planner": {"mode": planner.mode, "model": settings.model_name or None},
-            "calendar": {"mode": "fixture", "connected": False},
+            "calendar": {"mode": "fixture" if (auth["owner"] in {"alex", "jordan"}) else "internal", "connected": auth["owner"] not in {"alex", "jordan"}},
             "store": {"mode": "sandbox"},
             "browser": {"connected": False},
             "voice": {"connected": False},
@@ -226,7 +229,7 @@ def create_app(settings: Settings | None = None):
 
         def submit():
             source_id = uid()
-            task_id = submit_message(store, owner, conversation_id, body.text, source_id=source_id)
+            task_id = submit_message(store, owner, conversation_id, body.text, source_id=source_id, timezone=body.timezone)
             if conv["title"] == "New conversation":
                 store.put(owner, "conversation", {**conv, "title": body.text[:48]})
             return {"task_id": task_id, "message_id": source_id, "events_url": f"/v1/tasks/{task_id}/events"}
@@ -278,8 +281,12 @@ def create_app(settings: Settings | None = None):
                 action = item.get("action")
                 if not action or item["status"] != "awaiting_input":
                     raise HTTPException(409, "This action is no longer awaiting review")
-                plan = owned(owner, "plan", action["plan_id"])
-                digest = fingerprint(owner, plan["id"], plan["revision"], plan["items"], plan["evidence_ids"])
+                if action.get("tool") == "scheduling.apply":
+                    plan = {"revision": 1, "status": "review"}
+                    digest = scheduling.digest(owner, action["arguments"])
+                else:
+                    plan = owned(owner, "plan", action["plan_id"])
+                    digest = fingerprint(owner, plan["id"], plan["revision"], plan["items"], plan["evidence_ids"])
                 if (
                     body.decision_id != action["decision_id"]
                     or body.fingerprint != action["fingerprint"]
@@ -373,7 +380,8 @@ def create_app(settings: Settings | None = None):
 
     @app.get("/v1/calendar")
     def calendar_events(auth=Depends(session)):
-        return {"items": calendar(), "mode": "fixture"}
+        return {"items": calendar() if auth["owner"] in {"alex", "jordan"} else scheduling.own_events(auth["owner"]),
+                "mode": "fixture" if auth["owner"] in {"alex", "jordan"} else "internal"}
 
     @app.get("/v1/carts")
     def carts(auth=Depends(session)):
@@ -395,9 +403,13 @@ def create_app(settings: Settings | None = None):
             "assertions": facts,
             "plans": store.list(owner, "plan"),
             "carts": store.list(owner, "cart"),
+            "availability": scheduling.presence(owner),
+            "busy_slots": scheduling.own_events(owner),
+            "scheduling": scheduling.inbox(owner),
         }
 
     app.include_router(accounts.router(origin_check, session))
+    app.include_router(scheduling.router(session, request_key))
     app.include_router(whatsapp.router(origin_check))
     web_dist = Path(__file__).resolve().parents[2] / "web" / "dist"
     if web_dist.is_dir():

@@ -17,7 +17,7 @@ export function SettingsView({ workspace: w, theme, onTheme }: { workspace: Work
   const connections = [
     { icon: Database, title: 'Personal memory', detail: w.status?.memory.detail, state: w.status?.memory.backend === 'falkordb' && w.status.memory.connected ? 'Connected' : 'Fixture mode' },
     { icon: Sparkles, title: 'Intelligence', detail: w.status?.planner.mode === 'model' ? w.status.planner.model : 'A deterministic local planner. No model API calls.', state: w.status?.planner.mode === 'model' ? 'Model configured' : 'Local planner' },
-    { icon: Globe2, title: 'Calendar', detail: 'Sample events for the demo. A live calendar is not connected.', state: 'Sample data' },
+    { icon: Globe2, title: 'Availability', detail: 'Profile status, internal busy slots and accepted invitations. Managed in Availability.', state: 'Internal tools' },
     { icon: ShoppingBag, title: 'Shopping', detail: 'Prepare and verify a local test cart. No checkout or real purchases.', state: 'Sandbox' },
     { icon: MessageSquare, title: 'Sixth chat', detail: 'Chat directly in your own account. Conversations and memories follow you when you sign in.', state: 'Available' },
   ];

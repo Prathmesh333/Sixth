@@ -1,4 +1,6 @@
+import { SchedulingCard } from "./SchedulingCard";
 import { useLayoutEffect, useRef, useState } from "react";
+import ReactMarkdown from 'react-markdown';
 import {
   ArrowUp,
   BrainCircuit,
@@ -136,7 +138,10 @@ export function Chat({
                     <span className="message-author">
                       {message.role === "user" ? "You" : "Sixth"}
                     </span>
-                    <p>{message.text}</p>
+                    {message.role === 'assistant'
+                      ? <div className="message-markdown"><ReactMarkdown skipHtml disallowedElements={['img']}>{message.text}</ReactMarkdown></div>
+                      : <p>{message.text}</p>}
+                    {task?.scheduling && <SchedulingCard task={task} busy={w.busy} onDecision={decision => void w.decide(task, decision)} />}
                     {task?.plan && (
                       <ActionCard
                         task={task}
@@ -163,7 +168,8 @@ export function Chat({
                 <Mark small />
                 <div className="message-content">
                   <span className="message-author">Sixth</span>
-                  <p>{task.reply}</p>
+                  <div className="message-markdown"><ReactMarkdown skipHtml disallowedElements={['img']}>{task.reply}</ReactMarkdown></div>
+                  {task.scheduling && <SchedulingCard task={task} busy={w.busy} onDecision={decision => void w.decide(task, decision)} />}
                   <ActionCard
                     task={task}
                     busy={w.busy}

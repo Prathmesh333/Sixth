@@ -31,3 +31,7 @@ WhatsApp is removed from the signup screen and remains disabled as an optional c
 API tests with a mocked Google verifier cover durable identity, nonce matching, replay/expiry rejection, consent, invalid provider verification, logout revocation, owner isolation and recipient-controlled friendship. Browser checks cover the Google-only welcome page, accessibility, narrow layouts and the existing assistant workflow using a test-only API session. CI runs account tests against SQLite and PostgreSQL.
 
 Identity verification follows [Google's server-side token guidance](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token).
+
+## Profile availability
+
+Profiles now support status flags, busy slots, per-friend sharing, availability questions, and confirmed invitations. See [Profile availability](26-profile-availability.md) for the current flow and access rules.

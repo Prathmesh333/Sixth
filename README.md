@@ -10,7 +10,9 @@ Sixth is a personal assistant that remembers the context behind your requests. T
 
 ## What Sixth does
 
-Sixth connects people, preferences, events, and plans through a memory graph. The current application demonstrates that connection through dinner planning and a sandbox shopping cart.
+Sixth connects people, preferences, events, and plans through a memory graph. The current application uses that context for dinner planning, a sandbox shopping cart, and internal availability with friend invitations.
+
+Set a profile status or save a busy slot in **Availability**. You can ask accepted friends about a time, send an invitation, and confirm a booking after everyone accepts. Free/busy access and selected memories require explicit sharing. See [profile availability](docs/26-profile-availability.md).
 
 For example, tell Sixth, `Maya is vegetarian.` In a new conversation, ask, `Plan Maya's birthday dinner for four.` Sixth uses the saved preference when it selects a recipe. If two more guests join, Sixth can revise the quantities. A temporary restriction can apply to that dinner without replacing Maya's saved preference.
 
@@ -22,7 +24,7 @@ Select **Why this plan?** to inspect the evidence. Select **Prepare test cart** 
 - Review sourced memories, correct preferences, and forget selected memories.
 - Create dinner plans with guest quantities, dietary restrictions, and sample pantry data.
 - Inspect the sources that informed a plan before you approve a test cart.
-- Use Google sign-in and manage friend requests by username. Friendship does not share private memories or conversations.
+- Use Google sign-in and manage friend requests by username. Friendship alone grants no access. Each user can share free/busy information or selected memories. Conversations stay private.
 - Choose Paper, Dusk, or Grove. The interface supports narrow screens, keyboard controls, and reduced motion.
 
 The landing page includes a scroll-driven product demonstration and an animated technology wheel.
@@ -54,7 +56,7 @@ To run the app yourself, follow the [local setup guide](docs/getting-started.md)
 
 ## Current scope
 
-The calendar, recipe catalog, pantry, and prices use sample data. The shopping flow prepares a sandbox cart. Real purchases, bookings, live calendar access, voice, and general browser actions are outside the current implementation. WhatsApp has an optional test connector, but live messaging is disabled.
+Personal profiles use saved internal availability slots and confirmed invitations. Demo calendar events, recipes, pantry contents, and prices use sample data. The shopping flow prepares a sandbox cart. External calendar access, external bookings, real purchases, voice, and general browser actions are outside the current implementation. WhatsApp has an optional test connector, but live messaging is disabled.
 
 The [database verification report](docs/24-database-verification.md) records the latest checks and limits. Local SQLite application tests and real FalkorDB integration tests passed. A fresh hosted demo-account workflow remains unverified because demo login is disabled. The latest local PostgreSQL suite did not complete.
 

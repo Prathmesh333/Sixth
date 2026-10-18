@@ -211,3 +211,59 @@ def test_consumer_workflow_and_responsive_layout():
         expect(page.get_by_text("dairy", exact=True)).not_to_be_visible()
         assert errors == [], errors
         browser.close()
+
+
+def test_personal_availability_invite_accept_and_book():
+    from datetime import datetime, timedelta
+
+    base = os.environ['SIXTH_WEB_URL'].rstrip('/')
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True, channel=os.environ.get('SIXTH_BROWSER_CHANNEL','chrome') or None)
+        a, b = browser.new_context(), browser.new_context()
+        def sign_in(context, subject):
+            headers={'Origin':base}
+            nonce=context.request.post(base+'/v1/auth/google/start',headers=headers).json()['nonce']
+            response=context.request.post(base+'/v1/auth/google',headers=headers,data={'credential':json.dumps({'sub':subject,'given_name':subject.title(),'email_verified':True,'nonce':nonce}),'consent':True})
+            assert response.status==200
+            return {**headers,'X-CSRF-Token':response.json()['csrf_token']}
+        ah,bh=sign_in(a,'browser-avery'),sign_in(b,'browser-jules')
+        username=b.request.get(base+'/v1/friends').json()['username']
+        friend=a.request.post(base+'/v1/friends',headers=ah,data={'username':username}).json()['id']
+        assert b.request.post(base+f'/v1/friends/{friend}/accept',headers=bh).status==200
+        page=a.new_page()
+        page.goto(base)
+        page.get_by_role('button',name='Friends',exact=True).click()
+        page.get_by_text('Manage sharing',exact=True).click()
+        page.get_by_label('Let this friend check my status and busy times').check()
+        page.get_by_role('button',name='Save sharing',exact=True).click()
+        expect(page.get_by_text('Sharing saved.',exact=True)).to_be_visible()
+        page.get_by_role('button',name='Availability',exact=True).click()
+        page.get_by_label('Status',exact=True).select_option('available')
+        page.get_by_role('button',name='Update status',exact=True).click()
+        expect(page.get_by_role('heading',name='Right now · available')).to_be_visible()
+        start=(datetime.now()+timedelta(days=3)).replace(hour=13,minute=0,second=0,microsecond=0)
+        page.get_by_label('What’s the plan?',exact=True).fill('A quiet tea break')
+        page.get_by_label('Starts',exact=True).fill(start.strftime('%Y-%m-%dT%H:%M'))
+        page.get_by_label('Ends',exact=True).fill((start+timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M'))
+        page.get_by_role('checkbox',name='Browser-Jules',exact=False).check()
+        page.get_by_role('button',name='Send invitation',exact=True).click()
+        expect(page.locator('.schedule-card').get_by_text('A quiet tea break',exact=True)).to_be_visible()
+        other=b.new_page()
+        other.goto(base)
+        other.get_by_role('button',name='Availability',exact=True).click()
+        expect(other.get_by_text('A quiet tea break',exact=True)).to_be_visible()
+        other.get_by_role('button',name='Accept',exact=True).click()
+        expect(other.get_by_text('Invitation from Browser-Avery · ready to book',exact=True)).to_be_visible()
+        page.get_by_role('button',name='Refresh inbox',exact=True).click()
+        page.get_by_role('button',name='Confirm booking',exact=True).click()
+        expect(page.get_by_text('Invitation from Browser-Avery · booked',exact=True)).to_be_visible()
+        assert len(a.request.get(base+'/v1/calendar/events').json()['items'])==1
+        assert len(b.request.get(base+'/v1/calendar/events').json()['items'])==1
+        page.screenshot(path='artifacts/sixth-availability-desktop.png',full_page=True)
+        page.set_viewport_size({'width':390,'height':844})
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        page.screenshot(path='artifacts/sixth-availability-mobile.png',full_page=True)
+        page.add_script_tag(path='node_modules/axe-core/axe.min.js')
+        violations=page.evaluate("async () => (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations")
+        assert violations==[], json.dumps([{'id':v['id'],'nodes':[n['target'] for n in v['nodes']]} for v in violations])
+        browser.close()

@@ -6,6 +6,7 @@ const titles: Record<View, string> = {
   plans: "Plans",
   memory: "Memory",
   friends: "Friends",
+  availability: "Availability",
   settings: "Settings",
 };
 

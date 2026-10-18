@@ -376,6 +376,12 @@
   line-height: 1.85;
   overflow-wrap: anywhere;
 }
+.app-shell .message-markdown { overflow-wrap: anywhere; font-size: 14px; line-height: 1.85; }
+.app-shell .message-markdown p { white-space: normal; }
+.app-shell .message-markdown ul, .app-shell .message-markdown ol { padding-left: 22px; margin-block: 8px 16px; }
+.app-shell .message-markdown blockquote { margin: 12px 0; padding-left: 16px; border-left: 2px solid var(--sixth-accent); color: var(--sixth-muted); }
+.app-shell .message-markdown a { color: var(--sixth-accent); text-decoration: underline; }
+.app-shell .message-markdown pre { max-width: 100%; overflow-x: auto; padding: 14px; border-radius: 10px; background: var(--workspace-tint); }
 .app-shell .message.user {
   padding-left: 65px;
   text-align: right;
@@ -1143,3 +1149,17 @@
     transform: none;
   }
 }
+.availability-view {max-width: 1000px;}
+.availability-form {display: grid; gap: 16px; max-width: 650px;}
+.availability-form label {display: grid; gap: 7px; font-size: 14px;}
+.availability-form input, .availability-form select {font: inherit; padding: 12px; border: 1px solid var(--workspace-line); border-radius: 10px; background: var(--sixth-surface); color: var(--sixth-text); min-width: 0; width: 100%; box-sizing: border-box;}
+.availability-form fieldset {border: 1px solid var(--workspace-line); border-radius: 12px; padding: 16px;}
+.check-row {display: flex !important; align-items: center; gap: 10px; margin: 12px 0; cursor: pointer;}
+.check-row input {width: 18px !important; height: 18px; flex-shrink: 0; accent-color: var(--sixth-accent);}
+.schedule-card {padding: 22px; margin: 14px 0; border: 1px solid var(--workspace-line); border-radius: 16px; background: var(--sixth-surface); overflow-wrap: anywhere;}
+.schedule-card p, .friend-sharing p {font-size: 14px; line-height: 1.65;}
+.friend-sharing {max-width: 600px; padding: 12px 0;}
+.friend-sharing details {margin: 16px 0;}
+.friend-card:has(.friend-sharing) {align-items: start;}
+.availability-view .friend-actions {flex-wrap: wrap; gap: 10px;}
+@media (max-width: 600px) {.availability-view .friend-actions .button {width: 100%;} .availability-form {max-width: 100%;}}

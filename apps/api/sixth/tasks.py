@@ -1,7 +1,7 @@
 from .models import now, uid
 
 
-def submit_message(store, owner, conversation_id, text, *, task_id=None, source_id=None, channel="web"):
+def submit_message(store, owner, conversation_id, text, *, task_id=None, source_id=None, channel="web", timezone="Asia/Calcutta"):
     task_id, source_id = task_id or uid(), source_id or uid()
     with store.transaction() as db:
         existing = db.execute(
@@ -17,5 +17,6 @@ def submit_message(store, owner, conversation_id, text, *, task_id=None, source_
             "id": task_id, "conversation_id": conversation_id, "text": text, "source_id": source_id,
             "status": "queued", "plan_revision": 1, "completed_action_ids": [],
             "outstanding_steps": [], "updated_at": now(), "channel": channel,
+            "timezone": timezone,
         })
     return task_id

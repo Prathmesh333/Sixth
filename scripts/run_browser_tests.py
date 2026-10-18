@@ -37,6 +37,7 @@ def main():
     environment = {
         **os.environ,
         "SIXTH_E2E": "1",
+        "PYTHONPATH": str(ROOT / "tests"),
         "SIXTH_MEMORY_BACKEND": "sqlite_fixture",
         "SIXTH_DATA_DIR": str(ROOT / "data" / ("e2e-" + uuid4().hex)),
         "SIXTH_MODEL_API_KEY": "",
@@ -57,7 +58,7 @@ def main():
                     sys.executable,
                     "-m",
                     "uvicorn",
-                    "sixth.main:app",
+                    "browser_app:app",
                     "--app-dir",
                     "apps/api",
                     "--host",

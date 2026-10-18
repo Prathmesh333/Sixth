@@ -61,7 +61,7 @@ class CorrectionInput(Input):
 
 
 class Intent(Input):
-    kind: Literal["remember", "dinner", "calendar", "recall", "general"]
+    kind: Literal["remember", "dinner", "calendar", "recall", "general", "scheduling"]
     subject: str = ""
     predicate: str = ""
     value: str = ""
@@ -70,3 +70,10 @@ class Intent(Input):
     dairy_free: bool = False
     scope_type: Literal["person", "event"] = "person"
     response: str = ""
+    schedule_action: Literal["", "set_status", "add_event", "check_availability", "ask_availability", "propose_meeting", "list_invitations", "confirm_meeting", "accept_invitation", "decline_invitation", "cancel_meeting"] = ""
+    friend_usernames: list[str] = Field(default_factory=list, max_length=10)
+    starts_at: str = ""
+    ends_at: str = ""
+    meeting_title: str = ""
+    request_id: str = ""
+    request_kind: Literal["meeting", "availability_request"] = "meeting"

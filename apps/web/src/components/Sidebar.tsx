@@ -84,6 +84,7 @@ export function Sidebar({
           <Plus size={17} /> New conversation <span>↗</span>
         </button>
         <nav className="primary-nav" aria-label="Main">
+          <button aria-current={view === 'availability' ? 'page' : undefined} className={view === 'availability' ? 'active' : ''} onClick={() => navigate('availability')}><CalendarDays size={18} /> Availability</button>
           <button
             aria-current={view === "chat" ? "page" : undefined}
             className={view === "chat" ? "active" : ""}

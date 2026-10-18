@@ -14,6 +14,7 @@ from .connectors import build_menu, calendar, execute_cart, fingerprint
 from .memory import Memory
 from .models import FactInput, now, uid
 from .planner import ModelError, Planner
+from .scheduling import SchedulingError
 from .storage import Store
 
 
@@ -71,7 +72,7 @@ class Runtime:
                 if task and task["status"] != "cancelled":
                     task.update(
                         status="failed",
-                        reply=str(exc) if isinstance(exc, ModelError) else "I couldn’t finish this request. Your earlier work is saved. Check the connection status and try again.",
+                        reply=str(exc) if isinstance(exc, (ModelError, SchedulingError)) else "I couldn’t finish this request. Your earlier work is saved. Check the connection status and try again.",
                         updated_at=now(),
                     )
                     self.store.put(owner, "task", task)
@@ -109,7 +110,8 @@ class Runtime:
                     break
                 if message["conversation_id"] == task["conversation_id"]:
                     history.append(message)
-        intent = self.planner.parse(task["text"], history=history, memories=memories)
+        intent = self.planner.parse(task["text"], history=history, memories=memories,
+                                    scheduling_context=self.scheduling.context(owner), timezone=task.get("timezone", "Asia/Calcutta"))
         task["intent"] = intent.model_dump()
         task["evidence"] = []
         if intent.kind == "remember":
@@ -130,13 +132,17 @@ class Runtime:
             )
             task["evidence"] = [fact]
             self.store.event(owner, task_id, "memory.updated", {"fact_id": fact["id"]})
+        elif intent.kind == "scheduling":
+            self.scheduling.prepare(owner, task, intent)
         elif intent.kind == "dinner":
             self.prepare_dinner(owner, task, intent)
         elif intent.kind == "calendar":
-            task["calendar"] = calendar()
+            task["calendar"] = calendar() if owner in {"alex", "jordan"} else self.scheduling.own_events(owner)
             task["reply"] = (
                 "On your sample calendar for Saturday: coffee with Sam at 11 am, then dinner at home from 7–9 pm. These are fixture events; no live calendar is connected."
             )
+            if owner not in {"alex", "jordan"}:
+                task["reply"] = "Your saved availability slots:\n" + ("\n".join(f"{e['title']}: {e['starts_at']} to {e['ends_at']}" for e in task["calendar"]) or "No busy slots recorded.")
         elif intent.kind == "recall":
             task["evidence"] = self.memory.current(owner)
             facts = task["evidence"]
@@ -266,6 +272,19 @@ class Runtime:
         owner, task_id = state["owner"], state["task_id"]
         task = self.store.get(owner, "task", task_id)
         if task["status"] == "cancelled":
+            return state
+        if task.get("action", {}).get("tool") == "scheduling.apply":
+            if task.get("decision") != "approve":
+                task["reply"] = "Nothing was sent or changed."
+            else:
+                action = task["action"]
+                self.store.event(owner, task_id, "tool.started", {"tool": action["tool"]})
+                outcome, task["reply"] = self.scheduling.execute(owner, action)
+                task["scheduling"]["outcome"] = outcome
+                task["result"] = {"status": "succeeded", "verified_at": now()}
+                task["completed_action_ids"] = [action["action_id"]]
+                self.store.event(owner, task_id, "tool.completed", {"action_id": action["action_id"]})
+            self.store.put(owner, "task", task)
             return state
         if task.get("decision") != "approve":
             task["reply"] = "I haven’t changed your cart. The plan is saved if you want to revise it."

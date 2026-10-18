@@ -13,6 +13,7 @@ Use the guides below to run Sixth, understand the implementation, or review the 
 | Deploy the frontend and API | [Hosted demo](21-hosted-demo.md) |
 | Check database behavior and current access limits | [Database verification](24-database-verification.md) |
 | Understand chat updates and model replies | [Chat responsiveness](25-chat-responsiveness.md) |
+| Set availability, share context, and book with friends | [Profile availability](26-profile-availability.md) |
 | Read the implementation history | [Implementation status](19-implementation-status.md) |
 | Configure the optional WhatsApp test connector | [WhatsApp integration](22-whatsapp-integration.md) |
 

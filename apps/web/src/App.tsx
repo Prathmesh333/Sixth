@@ -11,6 +11,7 @@ import { PlansView } from "./components/PlansView";
 import { SettingsView } from "./components/SettingsView";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
 import { Welcome } from "./components/Welcome";
+import { AvailabilityView } from "./components/AvailabilityView";
 import { FriendsView } from "./components/FriendsView";
 
 function initialTheme(): Theme {
@@ -116,6 +117,7 @@ export function App() {
           {view === "memory" && (
             <MemoryView workspace={workspace} onChat={() => navigate("chat")} />
           )}
+          {view === "availability" && <AvailabilityView key={workspace.session.account} demo={workspace.session.demo} />}
           {view === "friends" && (
             <FriendsView key={workspace.session.account} />
           )}

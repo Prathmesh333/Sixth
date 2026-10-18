@@ -174,7 +174,9 @@ class Accounts:
             profile = self.store.get(other, "profile", "self") or {}
             return {"id": item["id"], "name": profile.get("name", "Sixth user"),
                     "username": profile.get("username", ""), "status": item["status"],
-                    "incoming": item["requested_by"] != owner, "memory_shared": False}
+                    "incoming": item["requested_by"] != owner,
+                    "memory_shared": bool(item.get("sharing", {}).get(other, {}).get("memory_ids")),
+                    "availability_shared": bool(item.get("sharing", {}).get(other, {}).get("availability"))}
 
         @router.get("/v1/friends")
         def friends(auth=Depends(session)):
