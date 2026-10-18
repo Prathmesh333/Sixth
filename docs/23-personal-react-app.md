@@ -8,7 +8,7 @@ Sixth uses its own React interface for Google sign-in, chat, memory, plans and f
 - Sign in again from another browser to retrieve that account's saved conversations and memories.
 - Sign out to revoke the current server session.
 - Send friend requests using exact usernames. Recipients can accept or decline; senders can cancel; either friend can remove the connection.
-- Friendship exposes only the chosen display name and username. It grants no access to memories, tasks, conversations or the other person's agent.
+- Friendship alone exposes the display name and username. Each user can separately grant free/busy access or share selected memories. Tasks and conversations stay private.
 
 User and friendship records live in the operational store, with random internal user IDs. Conversation, task and memory ownership uses those IDs. Google subject identifiers are hashed for identity lookup; Google credentials and client secrets are not stored. Google's official verifier checks signature, audience, issuer and expiry. Sixth additionally requires verified email and a single-use, expiring nonce bound to an HTTP-only browser cookie. Sessions use HTTP-only cookies, CSRF tokens, origin checks and server-side revocation. Authentication and friend-request attempts have persistent limits. Personalized API responses are marked no-store.
 
@@ -22,7 +22,7 @@ Keep React components and the API contract reusable. A later Android release can
 
 ## Preview boundaries
 
-Use synthetic information for the hackathon. Account deletion, abuse reporting/blocking, direct friend messaging and selective memory sharing are not implemented. Google manages sign-in and account recovery. Friend lists refresh when opened or after an action; they are not live subscriptions.
+Use synthetic information for the hackathon. Account deletion, abuse reporting/blocking, direct friend messaging are not implemented. Selective memory sharing and internal availability are described below. Google manages sign-in and account recovery. Friend lists refresh when opened or after an action; they are not live subscriptions.
 
 WhatsApp is removed from the signup screen and remains disabled as an optional connector. No Android packaging, app-store release, push notifications or offline storage is implied. Deployment still requires one API worker and one service instance. Before broader rollout, add recovery/deletion controls, stronger abuse controls and the remaining data-protection work documented in the hosting and WhatsApp notes.
 
